@@ -1,0 +1,5 @@
+Metadata-Version: 2.1
+Name: regex_enumerator
+Version: 0.1
+Summary: Enumerate all strings that match a given regex
+Author: Vincenzo Greco
