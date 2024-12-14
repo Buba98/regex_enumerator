@@ -11,7 +11,7 @@ pip install regex-enumerator
 from regex_enumerator import RegexEnumerator
 
 # Create a RegexEnumerator
-re = RegexEnumerator('a[0-9]b')
+re = RegexEnumerator(r'a[0-9]b')
 
 # Get the next string that matches the regex
 print(re.next()) # a0b
@@ -25,6 +25,7 @@ print(re.next()) # a2b
 - [x] Quantifiers for groups
 - [x] Groups
 - [x] Alternation 
+- [x] Escaped characters 
 
 ## How it works
 This library works by parsing the regex pattern. Once the pattern is parsed, it performs a breadth-first search on the tree of the pattern. This ensures to be able to generate all the strings and don't get stuck on a unbounded quantifier for a character class or group.

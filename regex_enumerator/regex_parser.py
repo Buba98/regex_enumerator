@@ -87,7 +87,6 @@ class RegexParser:
                     raise ValueError('Invalid escape character')
                 if len(regex) < 3 or regex[2] not in '0123456789abcdefABCDEF':
                     num = int(regex[1], 16)
-
                     incr = 2
                 else:
                     num = int(regex[1:3], 16)
@@ -108,26 +107,35 @@ class RegexParser:
             negated = True
             i += 1
 
-        while i < len(regex) and regex[i] != ']':
+        len_regex = len(regex)
+
+        while i < len_regex and regex[i] != ']':
+
+            char = regex[i]
+
             if regex[i] == '\\':
-                i += 1
-                incr, escape_char = self._parseEscapeChar(regex[i:])
-                chars_list.append(escape_char)
+                incr, escape_char = self._parseEscapeChar(regex[i + 1:])
                 i += incr
-            elif first_char is None:
-                first_char = regex[i]
-            elif regex[i] == '-':
+                if len(escape_char) > 1 or escape_char == '-':
+                    i += 1
+                    chars_list.append(escape_char)
+                    continue
+                char = escape_char
+
+            if first_char is None:
+                first_char = char
+            elif char == '-':
                 range_divider = True
             elif range_divider:
                 chars_list.extend([chr(c) for c in range(
-                    ord(first_char), ord(regex[i]) + 1)])
+                    ord(first_char), ord(char) + 1)])
                 first_char = None
                 range_divider = False
             else:
                 if first_char is not None:
                     chars_list.append(first_char)
                     first_char = None
-                chars_list.append(regex[i])
+                chars_list.append(char)
             i += 1
 
         if regex[i] != ']':
