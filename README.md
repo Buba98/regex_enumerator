@@ -1,6 +1,11 @@
 # Regex enumerator
 This library is ment to generate all the strings that match a given regex pattern. It is written in python and uses no external libraries.
 
+## Installation
+```bash
+pip install regex-enumerator
+```
+
 ## Usage
 ```python
 from regex_enumerator import RegexEnumerator
