@@ -11,6 +11,9 @@ class RegexParser:
     def _parseRegex(self, regex: str, to_close: bool) -> tuple[int, RegexTree]:
         alternatives: list[Alternative] = []
         charClassesList: list[CharClasses | RegexTree] = []
+        min_len = 1
+        max_len = 1
+        closed = not to_close
 
         i = 0
         while i < len(regex):
@@ -21,6 +24,9 @@ class RegexParser:
             elif regex[i] == ')':
                 if to_close:
                     i += 1
+                    incr, min_len, max_len = self._parseQuantifier(regex[i:])
+                    i += incr
+                    closed = True
                     break
                 raise ValueError('Invalid regex')
             elif regex[i] == '|':
@@ -32,8 +38,11 @@ class RegexParser:
                 charClassesList.append(charClasses)
                 i += incr
 
+        if not closed:
+            raise ValueError('Invalid regex')
+
         alternatives.append(Alternative(charClassesList))
-        return i, RegexTree(alternatives)
+        return i, RegexTree(alternatives, min_len, max_len)
 
     def _parseCharClasses(self, regex: str) -> tuple[int, CharClasses]:
         i = 0

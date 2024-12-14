@@ -21,7 +21,8 @@ class CharClasses:
         elif self.base == 1:
             self.max_index = self.max_len - self.min_len
         else:
-            self.max_index = ((self.base ** self.min_len - self.base ** (self.max_len + 1)) // (1 - self.base)) - 1
+            self.max_index = ((self.base ** self.min_len - self.base **
+                              (self.max_len + 1)) // (1 - self.base)) - 1
 
         self.current: set[str] = {self.calculate()}
 
@@ -143,7 +144,7 @@ class Alternative:
 
 
 class RegexTree:
-    def __init__(self, alternatives: list[Alternative]):
+    def __init__(self, alternatives: list[Alternative], min_len: int, max_len: int):
         self.alternatives: list[Alternative] = alternatives
         self.index = 0
 
