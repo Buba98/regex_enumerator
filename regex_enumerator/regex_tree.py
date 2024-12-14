@@ -124,9 +124,7 @@ class Alternative:
 
     def calculate(self) -> set[str]:
         res = set()
-
-        for string in self.classes_or_regex_list[0].current:
-            res.add(string)
+        res.update(self.classes_or_regex_list[0].current)
 
         done = self.classes_or_regex_list[0].done
 
@@ -146,7 +144,8 @@ class Alternative:
 class RegexTree:
     def __init__(self, alternatives: list[Alternative], min_len: int, max_len: int):
         self.alternatives: list[Alternative] = alternatives
-        self.index = 0
+        self.min_len = min_len
+        self.max_len = max_len
 
         i = 0
         while i < len(self.alternatives):
@@ -157,48 +156,95 @@ class RegexTree:
 
         self.base = len(self.alternatives)
 
-        if self.base == 0:
+        if self.base == 0 or self.max_len == 0:
             self.done = True
             self.current: set[str] = set()
             return
 
         self.done = False
+        self.gen_charset = False
+        self.index_charset = 0
+        self.index_repetition = 0
+        self.done_repetition = False
+        self.current_charset: set[str] = self.calculate_charset()
         self.current: set[str] = self.calculate()
 
     def next(self) -> set[str]:
         assert not self.done
 
-        self.index += 1
+        if self.done_charset:
+            self.gen_charset = False
+        elif self.done_repetition:
+            self.gen_charset = True
 
-        for i in range(self.index, self.index + self.base):
+        if self.gen_charset:
+            next_charset: set[str] = self.next_charset()
+            # optimize it by using only the new charset
+        else:
+            if not self.done_repetition:
+                self.index_repetition += 1
+
+        res: set[str] = self.calculate()
+
+        self.gen_charset = not self.gen_charset
+        new_res = res - self.current
+        self.current.update(new_res)
+        return new_res
+
+    def calculate(self) -> set[str]:
+        if self.max_len is not None and self.index_repetition + self.min_len >= self.max_len:
+            self.done_repetition = True
+            if self.done_charset:
+                self.done = True
+
+        if self.index_repetition + self.min_len == 0:
+            return {''}
+
+        res = set(self.current_charset)
+
+        for i in range(1, self.min_len + self.index_repetition):
+            temp = set()
+            for prv_str in res:
+                for string in self.current_charset:
+                    temp.add(prv_str + string)
+            res = temp
+
+        return res
+
+    def next_charset(self) -> set[str]:
+        assert not self.done_charset
+
+        self.index_charset += 1
+
+        for i in range(self.index_charset, self.index_charset + self.base):
             if self.alternatives[i % self.base].done:
-                self.index += 1
+                self.index_charset += 1
             else:
                 break
 
-        res = self.alternatives[self.index % self.base].next()
+        res = self.alternatives[self.index_charset % self.base].next()
 
-        done = True
+        done_charset = True
 
         for alternative in self.alternatives:
             if not alternative.done:
-                done = False
+                done_charset = False
                 break
 
-        new_res = res - self.current
-        self.current.update(new_res)
-        self.done = done
-        return res
+        new_res = res - self.current_charset
+        self.current_charset.update(new_res)
+        self.done_charset = done_charset
+        return new_res
 
-    def calculate(self) -> set[str]:
+    def calculate_charset(self) -> set[str]:
         res = set()
 
-        done = True
+        done_charset = True
 
         for alternative in self.alternatives:
             res.update(alternative.current)
-            done = done and alternative.done
+            done_charset = done_charset and alternative.done
 
-        self.done = done
+        self.done_charset = done_charset
 
         return res
