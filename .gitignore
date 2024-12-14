@@ -6,3 +6,5 @@ __pycache__/
 .idea/
 .pytest_cache/
 .eggs/
+.benchmarks/
+regex_enumerator.egg-info/
