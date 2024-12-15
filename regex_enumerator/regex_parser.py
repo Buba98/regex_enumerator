@@ -1,6 +1,17 @@
 from .regex_tree import Alternative, CharClasses, RegexTree
 
 
+class RegexError(Exception):
+    def __init__(self, regex: str, index: int, message: str):
+        self.regex = regex
+        self.index = index
+        self.message = message
+
+    def __str__(self):
+        caret_line = ' ' * self.index + '^'
+        return f"{self.regex}\n{caret_line}\n{self.message}"
+
+
 class RegexParser:
     charset = [chr(c) for c in range(32, 127)]
 
@@ -28,7 +39,7 @@ class RegexParser:
                         min_len, max_len = self._parseQuantifier()
                         to_close = False
                         break
-                    raise ValueError('Invalid regex')
+                    self._raise_error("Unmatched closing parenthesis")
                 case '|':
                     alternatives.append(Alternative(charClassesList))
                     charClassesList = []
@@ -38,13 +49,16 @@ class RegexParser:
                     charClassesList.append(charClasses)
 
         if to_close:
-            raise ValueError('Invalid regex')
+            self._raise_error("Unmatched opening parenthesis")
 
         alternatives.append(Alternative(charClassesList))
         return RegexTree(alternatives, min_len, max_len)
 
     def _parse_char_classes(self) -> CharClasses:
         chars_list: list[str] = []
+
+        if self.index >= len(self.regex):
+            self._raise_error("Unexpected end of regex in character class")
 
         char = self.regex[self.index]
         self.index += 1
@@ -61,7 +75,7 @@ class RegexParser:
     def _parseEscapeChar(self) -> str:
 
         if len(self.regex) <= self.index:
-            raise ValueError('Invalid escape character')
+            self._raise_error("Incomplete escape sequence")
 
         char = self.regex[self.index]
         self.index += 1
@@ -88,7 +102,7 @@ class RegexParser:
                     num = int(self.regex[self.index: self.index + 2], 16)
                     self.index += 2
                 if num < 32 or num > 126:
-                    raise ValueError('Invalid escape character')
+                    self._raise_error(f"Invalid escape character {num}")
                 return chr(num)
             case _: return char
 
@@ -99,7 +113,7 @@ class RegexParser:
         negated = False
 
         if len(self.regex) <= self.index:
-            raise ValueError('Invalid character class')
+            self._raise_error("Unclosed character class")
 
         if self.regex[self.index] == '^':
             negated = True
@@ -134,11 +148,8 @@ class RegexParser:
                     first_char = None
                 chars_list.append(char)
 
-        if len(self.regex) <= self.index:
-            raise ValueError('Invalid character class')
-
-        if self.regex[self.index] != ']':
-            raise ValueError('Invalid character class')
+        if len(self.regex) <= self.index or self.regex[self.index] != ']':
+            self._raise_error("Unclosed character class")
 
         self.index += 1
 
@@ -182,7 +193,7 @@ class RegexParser:
             self.index += 1
 
         if self.index >= len(self.regex) or self.regex[self.index] not in '0123456789':
-            raise ValueError('Invalid quantifier')
+            self._raise_error("Invalid quantifier")
 
         while self.index < len(self.regex) and self.regex[self.index] in '0123456789':
             min_len = min_len * 10 + int(self.regex[self.index])
@@ -192,12 +203,12 @@ class RegexParser:
             self.index += 1
 
         if self.index >= len(self.regex):
-            raise ValueError('Invalid quantifier')
+            self._raise_error("Invalid quantifier")
         elif self.regex[self.index] == '}':
             self.index += 1
             return min_len, min_len
         elif self.regex[self.index] != ',':
-            raise ValueError('Invalid quantifier')
+            self._raise_error("Invalid quantifier")
 
         self.index += 1
 
@@ -205,7 +216,7 @@ class RegexParser:
             self.index += 1
 
         if self.index >= len(self.regex) or self.regex[self.index] not in '0123456789}':
-            raise ValueError('Invalid quantifier')
+            self._raise_error("Invalid quantifier")
 
         if self.regex[self.index] == '}':
             self.index += 1
@@ -216,14 +227,18 @@ class RegexParser:
             self.index += 1
 
         if max_len < min_len:
-            raise ValueError('Invalid quantifier')
+            self._raise_error(
+                "Max length cannot be less than min length in quantifier")
 
         while self.index < len(self.regex) and self.regex[self.index] == ' ':
             self.index += 1
 
         if self.index >= len(self.regex) or self.regex[self.index] != '}':
-            raise ValueError('Invalid quantifier')
+            self._raise_error("Invalid quantifier")
 
         self.index += 1
 
         return min_len, max_len
+
+    def _raise_error(self, message: str):
+        raise RegexError(self.regex, self.index, message)
