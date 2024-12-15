@@ -9,3 +9,4 @@ __pycache__/
 regex_enumerator.egg-info/
 dist/
 build/
+.coverage

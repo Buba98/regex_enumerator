@@ -7,49 +7,49 @@ def test_empty_regex():
 
     f_finite(regexEnumerator, possibilities)
 
-def test_single_char():
+def test_single_literal_char():
     regexEnumerator = RegexEnumerator(r'a')
     possibilities = ['a']
 
     f_finite(regexEnumerator, possibilities)
 
-def test_single_char_with_quantifier():
+def test_zero_or_more_quantifier():
     regexEnumerator = RegexEnumerator(r'a*')
     possibilities = ['', 'a', 'aa', 'aaa', 'aaaa', 'aaaaa']
 
     f_infinite(regexEnumerator, possibilities)
 
-def test_single_char_with_quantifier_plus():
+def test_one_or_more_quantifier():
     regexEnumerator = RegexEnumerator(r'a+')
     possibilities = ['a', 'aa', 'aaa', 'aaaa', 'aaaaa']
 
     f_infinite(regexEnumerator, possibilities)
 
-def test_single_char_with_quantifier_question():
+def test_zero_or_one_quantifier():
     regexEnumerator = RegexEnumerator(r'a?')
     possibilities = ['', 'a']
 
     f_finite(regexEnumerator, possibilities)
 
-def test_single_char_with_quantifier_braces():
+def test_exact_repetition_quantifier():
     regexEnumerator = RegexEnumerator(r'a{2}')
     possibilities = ['aa']
 
     f_finite(regexEnumerator, possibilities)
 
-def test_single_char_with_quantifier_braces_comma():
+def test_min_repetition_quantifier():
     regexEnumerator = RegexEnumerator(r'a{2,}')
     possibilities = ['aa', 'aaa', 'aaaa', 'aaaaa']
 
     f_infinite(regexEnumerator, possibilities)
 
-def test_single_char_with_quantifier_braces_comma_max():
+def test_min_max_repetition_quantifier():
     regexEnumerator = RegexEnumerator(r'a{2,4}')
     possibilities = ['aa', 'aaa', 'aaaa']
 
     f_finite(regexEnumerator, possibilities)
 
-def test_single_char_with_quantifier_0():
+def test_zero_repetition_quantifier():
     regexEnumerator = RegexEnumerator(r'a{0}')
     possibilities = ['']
 
