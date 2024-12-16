@@ -24,3 +24,9 @@ def test_group_with_zero_or_more_quantifier():
     possibilities = ['', 'a', 'aa', 'aaa', 'aaaa', 'aaaaa']
 
     f_infinite(regexEnumerator, possibilities)
+
+def test_named_group():
+    regexEnumerator = RegexEnumerator(r'(?<name>a[bcd](e)?)')
+    possibilities = ['ab', 'abe', 'ac', 'ace', 'ad', 'ade']
+
+    f_finite(regexEnumerator, possibilities)

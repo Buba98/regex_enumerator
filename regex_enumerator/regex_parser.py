@@ -27,6 +27,21 @@ class RegexParser:
         charClassesList: list[CharClasses | RegexTree] = []
         min_len, max_len = 1, 1
 
+        if to_close and self.index < len(self.regex) and self.regex[self.index] == '?':
+            self.index += 1
+            if self.index >= len(self.regex) or self.regex[self.index] != '<':
+                self._raise_error("Invalid named group")
+            self.index += 1
+            name = ''
+            while self.index < len(self.regex) and self.regex[self.index] != '>':
+                name += self.regex[self.index]
+                self.index += 1
+            if self.index >= len(self.regex) or self.regex[self.index] != '>':
+                self._raise_error("Invalid named group")
+            self.index += 1
+        else:
+            name = None
+
         while self.index < len(self.regex):
             match self.regex[self.index]:
                 case'(':
@@ -52,7 +67,7 @@ class RegexParser:
             self._raise_error("Unmatched opening parenthesis")
 
         alternatives.append(Alternative(charClassesList))
-        return RegexTree(alternatives, min_len, max_len)
+        return RegexTree(alternatives, min_len, max_len, name)
 
     def _parse_char_classes(self) -> CharClasses:
         chars_list: list[str] = []
