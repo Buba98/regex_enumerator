@@ -44,10 +44,18 @@ class CharClasses:
         return {res}
 
 
+class BackReference:
+    def __init__(self, reference: RegexTree, min_len: int, max_len: int | None):
+        self.reference = reference
+        self.done = False
+        self.min_len = min_len
+        self.max_len = max_len
+
+
 class Alternative:
-    def __init__(self, elements: list[CharClasses | RegexTree]):
+    def __init__(self, elements: list[CharClasses | RegexTree | BackReference]):
         self._index = 0
-        self._elements: list[CharClasses | RegexTree] = [
+        self._elements: list[CharClasses | RegexTree | BackReference] = [
             element for element in elements if not element.done or len(element.current) > 0]
         self._base = len(self._elements)
         self.done = self._base == 0
@@ -91,8 +99,7 @@ class Alternative:
 
 
 class RegexTree:
-    def __init__(self, alternatives: list[Alternative], min_len: int, max_len: int, name: str | None):
-        self.name = name
+    def __init__(self, alternatives: list[Alternative], min_len: int, max_len: int):
         self._alternatives: list[Alternative] = [
             alternative for alternative in alternatives if not alternative.done or len(alternative.current) > 0]
         self._min_len = min_len

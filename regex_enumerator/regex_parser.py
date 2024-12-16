@@ -1,4 +1,4 @@
-from .regex_tree import Alternative, CharClasses, RegexTree
+from .regex_tree import Alternative, BackReference, CharClasses, RegexTree
 
 
 class RegexError(Exception):
@@ -24,68 +24,107 @@ class RegexParser:
 
     def _parseRegex(self, to_close: bool) -> RegexTree:
         alternatives: list[Alternative] = []
-        charClassesList: list[CharClasses | RegexTree] = []
-        min_len, max_len = 1, 1
-
-        if to_close and self.index < len(self.regex) and self.regex[self.index] == '?':
-            self.index += 1
-            if self.index >= len(self.regex) or self.regex[self.index] != '<':
-                self._raise_error("Invalid named group")
-            self.index += 1
-            name = ''
-            while self.index < len(self.regex) and self.regex[self.index] != '>':
-                name += self.regex[self.index]
-                self.index += 1
-            if self.index >= len(self.regex) or self.regex[self.index] != '>':
-                self._raise_error("Invalid named group")
-            self.index += 1
-        else:
-            name = None
+        elements: list[CharClasses | RegexTree | BackReference] = []
+        named_groups: map[str, RegexTree] = {}
+        ordered_groups: list[RegexTree] = []
+        min_len_group, max_len_group = 1, 1
 
         while self.index < len(self.regex):
-            match self.regex[self.index]:
+            char = self.regex[self.index]
+            self.index += 1
+            match char:
                 case'(':
-                    self.index += 1
-                    subTree = self._parseRegex(True)
-                    charClassesList.append(subTree)
-                case ')':
-                    if to_close:
+                    name = None
+                    if self.index < len(self.regex) and self.regex[self.index] == '?':
                         self.index += 1
-                        min_len, max_len = self._parseQuantifier()
-                        to_close = False
-                        break
-                    self._raise_error("Unmatched closing parenthesis")
+                        if self.index >= len(self.regex) or self.regex[self.index] != '<':
+                            self._raise_error("Invalid named group")
+                        self.index += 1
+                        name = ''
+                        while self.index < len(self.regex) and self.regex[self.index] != '>':
+                            name += self.regex[self.index]
+                            self.index += 1
+                        if self.index >= len(self.regex) or self.regex[self.index] != '>' or name == '':
+                            self._raise_error("Invalid named group")
+                        self.index += 1
+                        if name in named_groups:
+                            self._raise_error("Duplicate named group")
+                    subTree = self._parseRegex(True)
+                    if name is not None:
+                        named_groups[name] = subTree
+                    ordered_groups.append(subTree)
+                    elements.append(subTree)
+                case ')':
+                    if not to_close:
+                        self._raise_error("Unmatched closing parenthesis")
+                    min_len_group, max_len_group = self._parseQuantifier()
+                    to_close = False
+                    break
                 case '|':
-                    alternatives.append(Alternative(charClassesList))
-                    charClassesList = []
-                    self.index += 1
+                    alternatives.append(Alternative(elements))
+                    elements = []
+                case '[':
+                    chars = self._parseCharClass()
+                    min_len, max_len = self._parseQuantifier()
+                    elements.append(CharClasses(chars, min_len, max_len))
+                case '.':
+                    chars = list(self.charset)
+                    min_len, max_len = self._parseQuantifier()
+                    elements.append(CharClasses(chars, min_len, max_len))
+                case '\\':
+                    reference = self._parseBackReferenceLookahead()
+                    if reference == None:
+                        chars = self._parseEscapeChar()
+                        min_len, max_len = self._parseQuantifier()
+                        elements.append(CharClasses(chars, min_len, max_len))
+                        continue
+                    if isinstance(reference, str):
+                        if reference not in named_groups:
+                            self._raise_error("Invalid back reference")
+                        group = named_groups[reference]
+                    else:
+                        if reference < 1 or reference > len(ordered_groups):
+                            self._raise_error("Invalid back reference")
+                        group = ordered_groups[reference - 1]
+                    min_len, max_len = self._parseQuantifier()
+                    elements.append(BackReference(group, min_len, max_len))
                 case _:
-                    charClasses = self._parse_char_classes()
-                    charClassesList.append(charClasses)
+                    min_len, max_len = self._parseQuantifier()
+                    elements.append(CharClasses([char], min_len, max_len))
 
         if to_close:
             self._raise_error("Unmatched opening parenthesis")
 
-        alternatives.append(Alternative(charClassesList))
-        return RegexTree(alternatives, min_len, max_len, name)
+        alternatives.append(Alternative(elements))
+        return RegexTree(alternatives, min_len_group, max_len_group)
 
-    def _parse_char_classes(self) -> CharClasses:
-        chars_list: list[str] = []
-
-        if self.index >= len(self.regex):
-            self._raise_error("Unexpected end of regex in character class")
+    def _parseBackReferenceLookahead(self) -> str | int | None:
+        if len(self.regex) <= self.index:
+            self._raise_error("Incomplete escape sequence")
 
         char = self.regex[self.index]
-        self.index += 1
 
         match char:
-            case '[':   chars_list = self._parseCharClass()
-            case '\\':  chars_list = self._parseEscapeChar()
-            case '.':   chars_list = list(self.charset)
-            case _:     chars_list = [char]
-
-        min_len, max_len = self._parseQuantifier()
-        return CharClasses(chars_list, min_len, max_len)
+            case 'k':
+                self.index += 1
+                name = ''
+                if len(self.regex) <= self.index or self.regex[self.index] != '<':
+                    self._raise_error("Invalid back reference")
+                self.index += 1
+                while self.index < len(self.regex) and self.regex[self.index] != '>':
+                    name += self.regex[self.index]
+                    self.index += 1
+                if len(self.regex) <= self.index or self.regex[self.index] != '>':
+                    self._raise_error("Invalid back reference")
+                self.index += 1
+                return name
+            case char if char in '1234567890':
+                num = int(char)
+                self.index += 1
+                while self.index < len(self.regex) and self.regex[self.index] in '0123456789':
+                    num = num * 10 + int(self.regex[self.index])
+                    self.index += 1
+                return num
 
     def _parseEscapeChar(self) -> str:
 
@@ -201,21 +240,16 @@ class RegexParser:
             case _: return 1, 1
 
     def _parseMinMax(self) -> tuple[int, int]:
+        self._skipSpaces()
+
         min_len = 0
-        max_len = 0
-
-        while self.index < len(self.regex) and self.regex[self.index] == ' ':
-            self.index += 1
-
         if self.index >= len(self.regex) or self.regex[self.index] not in '0123456789':
             self._raise_error("Invalid quantifier")
-
         while self.index < len(self.regex) and self.regex[self.index] in '0123456789':
             min_len = min_len * 10 + int(self.regex[self.index])
             self.index += 1
 
-        while self.index < len(self.regex) and self.regex[self.index] == ' ':
-            self.index += 1
+        self._skipSpaces()
 
         if self.index >= len(self.regex):
             self._raise_error("Invalid quantifier")
@@ -226,9 +260,7 @@ class RegexParser:
             self._raise_error("Invalid quantifier")
 
         self.index += 1
-
-        while self.index < len(self.regex) and self.regex[self.index] == ' ':
-            self.index += 1
+        self._skipSpaces()
 
         if self.index >= len(self.regex) or self.regex[self.index] not in '0123456789}':
             self._raise_error("Invalid quantifier")
@@ -237,6 +269,7 @@ class RegexParser:
             self.index += 1
             return min_len, None
 
+        max_len = 0
         while self.index < len(self.regex) and self.regex[self.index] in '0123456789':
             max_len = max_len * 10 + int(self.regex[self.index])
             self.index += 1
@@ -245,15 +278,17 @@ class RegexParser:
             self._raise_error(
                 "Max length cannot be less than min length in quantifier")
 
-        while self.index < len(self.regex) and self.regex[self.index] == ' ':
-            self.index += 1
+        self._skipSpaces()
 
         if self.index >= len(self.regex) or self.regex[self.index] != '}':
             self._raise_error("Invalid quantifier")
-
         self.index += 1
 
         return min_len, max_len
+
+    def _skipSpaces(self):
+        while self.index < len(self.regex) and self.regex[self.index] == ' ':
+            self.index += 1
 
     def _raise_error(self, message: str):
         raise RegexError(self.regex, self.index, message)
