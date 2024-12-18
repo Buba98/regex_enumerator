@@ -23,9 +23,10 @@ print(re.next()) # a2b
 - [x] Character classes
 - [x] Quantifiers for character classes
 - [x] Quantifiers for groups
-- [x] Groups
+- [x] Groups (named and unnamed)
 - [x] Alternation 
 - [x] Escaped characters 
+- [x] Backreferences (named and unnamed)
 
 ## How it works
 This library works by parsing the regex pattern. Once the pattern is parsed, it performs a breadth-first search on the tree of the pattern. This ensures to be able to generate all the strings and don't get stuck on a unbounded quantifier for a character class or group.

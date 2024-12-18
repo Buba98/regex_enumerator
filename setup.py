@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='regex_enumerator',
-    version='0.3.1',
+    version='0.4.0',
     packages=find_packages(include=['regex_enumerator', 'regex_enumerator.*']),
     description='Enumerate all strings that match a given regex',
     author='Vincenzo Greco',

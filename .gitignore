@@ -10,3 +10,4 @@ regex_enumerator.egg-info/
 dist/
 build/
 .coverage
+upload_pypi.sh
