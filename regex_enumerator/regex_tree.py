@@ -234,10 +234,16 @@ class RegexTree:
         res: set[str] = self._calculate()
         self._gen_charset = not self._gen_charset
         new_res = res - self.current
+        if len(new_res) == 0:
+            return new_res
+        
         self.current.update(new_res)
+        if len(self.references) == 0:
+            return new_res
+
         for reference in self.references:
             reference.update()
-        return new_res
+        return self.current
 
     def _calculate(self) -> set[str]:
         if self._max_len is not None and self._index_repetition + self._min_len >= self._max_len:
