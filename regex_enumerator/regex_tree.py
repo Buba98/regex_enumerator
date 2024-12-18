@@ -45,11 +45,55 @@ class CharClasses:
 
 
 class BackReference:
-    def __init__(self, reference: RegexTree, min_len: int, max_len: int | None):
-        self.reference = reference
-        self.done = False
-        self.min_len = min_len
-        self.max_len = max_len
+    def __init__(self, min_len: int, max_len: int | None, reference: RegexTree):
+        self._min_len = min_len
+        self._max_len = max_len
+        self._index = 0
+        self.reference: RegexTree = reference
+        self.done = max_len == 0 or (
+            reference.done and len(reference.current) == 0)
+        self.current: dict[str, list[str]
+                           ] = self._calculate() if not self.done else {}
+
+    def update(self):
+        assert not self.done
+        if self._max_len is not None and self._min_len + self._index >= self._max_len and self.reference.done:
+            self.done = True
+
+        for string in self.reference.current:
+            if self.current[string] is None:
+                for i in range(self._min_len, min(self._min_len + self._index, self._max_len) + 1):
+                    self.current[string].append(string * i)
+            else:
+                self.current[string].append(
+                    string * min(self._min_len + self._index, self._max_len))
+
+    def _calculate(self) -> dict[str, set[str]]:
+        current_ref = self.reference.current
+        if self._max_len is not None and self._min_len + self._index >= self._max_len and self.reference.done:
+            self.done = True
+
+        result: dict[str, list[str]] = {}
+
+        for string in current_ref:
+            result[string] = [string * (self._min_len + self._index)]
+
+        return result
+
+    def next(self) -> dict[str, set[str]]:
+        assert not self.done
+        self._index += 1
+        if self._max_len is not None and self._min_len + self._index >= self._max_len and self.reference.done:
+            self.done = True
+
+        if self._min_len + self._index >= self._max_len:
+            return self.current
+
+        for string in self.current.keys():
+            self.current[string].append(
+                string * min(self._min_len + self._index, self._max_len))
+
+        return self.current
 
 
 class Alternative:
@@ -63,6 +107,7 @@ class Alternative:
 
     def next(self) -> set[str]:
         assert not self.done
+        assert not isinstance(self._elements[0], BackReference)
 
         self._index += 1
         for i in range(self._index, self._index + self._base):
@@ -71,35 +116,83 @@ class Alternative:
             else:
                 break
 
-        result = set(
-            self._elements[0].current) if self._index % self._base else self._elements[0].next()
+        result: list[tuple[str, dict[RegexTree, str]]] = []
+
+        if isinstance(self._elements[0], CharClasses):
+            for string in self._elements[0].next() if self._index % self._base == 0 else self._elements[0].current:
+                result.append((string, {}))
+        else:
+            for string in self._elements[0].next() if self._index % self._base == 0 else self._elements[0].current:
+                result.append((string, {self._elements[0]: string}))
+
         done = self._elements[0].done
 
         for i, element in enumerate(self._elements[1:], start=1):
-            suffixes = element.next() if i == self._index % self._base else element.current
-            result = {prefix + suffix for prefix in result for suffix in suffixes}
+            temp = []
+            if isinstance(element, CharClasses):
+                for sfx in element.next() if i == self._index % self._base else element.current:
+                    for pfx in result:
+                        temp.append((pfx[0] + sfx, pfx[1]))
+            elif isinstance(element, RegexTree):
+                for sfx in element.next() if i == self._index % self._base else element.current:
+                    for pfx in result:
+                        temp.append((pfx[0] + sfx, {**pfx[1], element: sfx}))
+            else:
+                reference = pfx[1][element.reference]
+                assert reference is not None
+                for sfx in element.next() if i == self._index % self._base else element.current:
+                    for pfx in result:
+                        temp.append(
+                            (pfx[0] + sfx, {**pfx[1], element.reference: sfx}))
+            result = temp
             done = done and element.done
 
         self.done = done
-        new_res = result - self.current
+        new_res = {struct[0] for struct in result} - self.current
         self.current.update(new_res)
         return new_res
 
     def _calculate(self) -> set[str]:
-        result = set(self._elements[0].current)
+        assert not isinstance(self._elements[0], BackReference)
+
+        result: list[tuple[str, dict[RegexTree, str]]] = []
+
+        if isinstance(self._elements[0], CharClasses):
+            for char in self._elements[0].current:
+                result.append((char, {}))
+        else:
+            for char in self._elements[0].current:
+                result.append((char, {self._elements[0]: char}))
+
         done = self._elements[0].done
 
         for element in self._elements[1:]:
+            temp: list[tuple[str, dict[RegexTree, str]]] = []
             done = done and element.done
-            result = {
-                prefix + suffix for prefix in result for suffix in element.current}
+            if isinstance(element, CharClasses):
+                for pfx in result:
+                    for sfx in element.current:
+                        temp.append((pfx[0] + sfx, pfx[1]))
+            elif isinstance(element, RegexTree):
+                for pfx in result:    
+                    for sfx in element.current:
+                        temp.append((pfx[0] + sfx, {**pfx[1], element: sfx}))
+            else:
+                reference = pfx[1][element.reference]
+                assert reference is not None
+                for pfx in result:
+                    for sfx in element.current:
+                        temp.append(
+                            (pfx[0] + sfx, {**pfx[1], element.reference: sfx}))
+            result = temp
 
         self.done = done
-        return result
+        return {struct[0] for struct in result}
 
 
 class RegexTree:
-    def __init__(self, alternatives: list[Alternative], min_len: int, max_len: int):
+    def __init__(self, alternatives: list[Alternative], min_len: int, max_len: int | None):
+        self.references: list[BackReference] = []
         self._alternatives: list[Alternative] = [
             alternative for alternative in alternatives if not alternative.done or len(alternative.current) > 0]
         self._min_len = min_len
@@ -110,8 +203,13 @@ class RegexTree:
         self._index_charset = 0
         self._index_repetition = 0
         self._done_repetition = False
-        self._current_charset: set[str] = self._calculate_charset()
+        self._current_chars: set[str] = self._calculate_chars()
         self.current: set[str] = self._calculate() if not self.done else set()
+
+    def add_reference(self, reference: BackReference):
+        if reference.done and len(reference.current) == 0:
+            return
+        self.references.append(reference)
 
     def next(self) -> set[str]:
         assert not self.done
@@ -132,6 +230,8 @@ class RegexTree:
         self._gen_charset = not self._gen_charset
         new_res = res - self.current
         self.current.update(new_res)
+        for reference in self.references:
+            reference.update()
         return new_res
 
     def _calculate(self) -> set[str]:
@@ -143,10 +243,9 @@ class RegexTree:
         if self._index_repetition + self._min_len == 0:
             return {''}
 
-        result = set(self._current_charset)
+        result = set(self._current_chars)
         for _ in range(1, self._min_len + self._index_repetition):
-            result = {
-                prefix + suffix for prefix in result for suffix in self._current_charset}
+            result = {pfx + sfx for pfx in result for sfx in self._current_chars}
 
         return result
 
@@ -169,12 +268,12 @@ class RegexTree:
                 done_charset = False
                 break
 
-        new_res = res - self._current_charset
-        self._current_charset.update(new_res)
+        new_res = res - self._current_chars
+        self._current_chars.update(new_res)
         self._done_charset = done_charset
         return new_res
 
-    def _calculate_charset(self) -> set[str]:
+    def _calculate_chars(self) -> set[str]:
         res = set()
         done_charset = True
 

@@ -25,7 +25,7 @@ class RegexParser:
     def _parseRegex(self, to_close: bool) -> RegexTree:
         alternatives: list[Alternative] = []
         elements: list[CharClasses | RegexTree | BackReference] = []
-        named_groups: map[str, RegexTree] = {}
+        named_groups: dict[str, RegexTree] = {}
         ordered_groups: list[RegexTree] = []
         min_len_group, max_len_group = 1, 1
 
@@ -63,6 +63,8 @@ class RegexParser:
                 case '|':
                     alternatives.append(Alternative(elements))
                     elements = []
+                    named_groups = {}
+                    ordered_groups = []
                 case '[':
                     chars = self._parseCharClass()
                     min_len, max_len = self._parseQuantifier()
@@ -87,7 +89,9 @@ class RegexParser:
                             self._raise_error("Invalid back reference")
                         group = ordered_groups[reference - 1]
                     min_len, max_len = self._parseQuantifier()
-                    elements.append(BackReference(group, min_len, max_len))
+                    reference = BackReference(group, min_len, max_len)
+                    group.addReference(reference)
+                    elements.append(reference)
                 case _:
                     min_len, max_len = self._parseQuantifier()
                     elements.append(CharClasses([char], min_len, max_len))
