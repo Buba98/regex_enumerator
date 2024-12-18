@@ -87,12 +87,14 @@ class BackReference:
         if self._max_len is not None and self._min_len + self._index >= self._max_len and self.reference.done:
             self.done = True
 
-        if self._min_len + self._index >= self._max_len:
+        if not self._max_len is None and self._min_len + self._index >= self._max_len:
             return self.current
 
         for string in self.current.keys():
-            self.current[string].append(
-                string * min(self._min_len + self._index, self._max_len))
+            if self._max_len is None:
+                self.current[string].append(string * (self._min_len + self._index))
+            else:
+                self.current[string].append(string * min(self._min_len + self._index, self._max_len))
 
         return self.current
 
