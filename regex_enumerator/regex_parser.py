@@ -186,10 +186,16 @@ class RegexParser:
             if char == '-' and first_char is not None and not range_divider:
                 range_divider = True
                 continue
-            elif char == '\\':
+            if char == '\\':
                 escape_char = self._parseEscapeChar()
                 if len(escape_char) > 1 or escape_char == '-':
                     chars_list.append(escape_char)
+                    if range_divider:
+                        chars_list.append('-')
+                        assert first_char is not None
+                        chars_list.append(first_char)
+                    elif first_char is not None:
+                        chars_list.append(first_char)
                     continue
                 char = escape_char
 
@@ -201,10 +207,8 @@ class RegexParser:
                 first_char = None
                 range_divider = False
             else:
-                if first_char is not None:
-                    chars_list.append(first_char)
-                    first_char = None
-                chars_list.append(char)
+                chars_list.append(first_char)
+                first_char = char
 
         if len(self.regex) <= self.index or self.regex[self.index] != ']':
             self._raise_error("Unclosed character class")
@@ -213,7 +217,9 @@ class RegexParser:
 
         if range_divider:
             chars_list.append('-')
-        if first_char is not None:
+            assert first_char is not None
+            chars_list.append(first_char)
+        elif first_char is not None:
             chars_list.append(first_char)
 
         if negated:

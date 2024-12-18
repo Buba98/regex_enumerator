@@ -56,22 +56,21 @@ class BackReference:
                            ] = self._calculate() if not self.done else {}
 
     def update(self):
-        assert not self.done
         if self._max_len is not None and self._min_len + self._index >= self._max_len and self.reference.done:
             self.done = True
 
         for string in self.reference.current:
             if string in self.current:
                 self.current[string].append(
-                    string * min(self._min_len + self._index, self._max_len))
+                    string * (self._min_len + self._index))
             else:
                 self.current[string] = []
-                for i in range(self._min_len, min(self._min_len + self._index, self._max_len) + 1):
+                for i in range(self._min_len, self._min_len + self._index + 1):
                     self.current[string].append(string * i)
 
     def _calculate(self) -> dict[str, set[str]]:
         current_ref = self.reference.current
-        if self._max_len is not None and self._min_len + self._index >= self._max_len and self.reference.done:
+        if self._max_len is not None and self._min_len + self._index >= self._max_len:
             self.done = True
 
         result: dict[str, list[str]] = {}
@@ -84,17 +83,11 @@ class BackReference:
     def next(self) -> dict[str, set[str]]:
         assert not self.done
         self._index += 1
-        if self._max_len is not None and self._min_len + self._index >= self._max_len and self.reference.done:
+        if self._max_len is not None and self._min_len + self._index >= self._max_len:
             self.done = True
 
-        if not self._max_len is None and self._min_len + self._index >= self._max_len:
-            return self.current
-
         for string in self.current.keys():
-            if self._max_len is None:
-                self.current[string].append(string * (self._min_len + self._index))
-            else:
-                self.current[string].append(string * min(self._min_len + self._index, self._max_len))
+            self.current[string].append(string * (self._min_len + self._index))
 
         return self.current
 
@@ -236,7 +229,7 @@ class RegexTree:
         new_res = res - self.current
         if len(new_res) == 0:
             return new_res
-        
+
         self.current.update(new_res)
         if len(self.references) == 0:
             return new_res

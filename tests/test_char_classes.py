@@ -84,3 +84,9 @@ def test_incomplete_range_character_class():
     possibilities = ['a', '-']
 
     f_finite(regexEnumerator, possibilities)
+
+def test_2_ranges():
+    regexEnumerator = RegexEnumerator(r'[1a-crf-g3]')
+    possibilities = ['1', 'a', 'b', 'c', 'f', 'g', 'r', '3']
+
+    f_finite(regexEnumerator, possibilities)

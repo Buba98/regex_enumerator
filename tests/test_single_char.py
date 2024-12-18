@@ -54,3 +54,9 @@ def test_zero_repetition_quantifier():
     possibilities = ['']
 
     f_finite(regexEnumerator, possibilities)
+
+def test_literal_special_characters():
+    regexEnumerator = RegexEnumerator(r'\*\+\?')
+    possibilities = ['*+?']
+
+    f_finite(regexEnumerator, possibilities)
