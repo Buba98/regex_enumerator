@@ -90,7 +90,7 @@ class RegexParser:
                         group = ordered_groups[reference - 1]
                     min_len, max_len = self._parseQuantifier()
                     reference = BackReference(group, min_len, max_len)
-                    group.addReference(reference)
+                    group.add_reference(reference)
                     elements.append(reference)
                 case _:
                     min_len, max_len = self._parseQuantifier()

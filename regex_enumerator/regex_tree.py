@@ -45,7 +45,7 @@ class CharClasses:
 
 
 class BackReference:
-    def __init__(self, min_len: int, max_len: int | None, reference: RegexTree):
+    def __init__(self, reference: RegexTree, min_len: int, max_len: int | None):
         self._min_len = min_len
         self._max_len = max_len
         self._index = 0
@@ -61,12 +61,13 @@ class BackReference:
             self.done = True
 
         for string in self.reference.current:
-            if self.current[string] is None:
-                for i in range(self._min_len, min(self._min_len + self._index, self._max_len) + 1):
-                    self.current[string].append(string * i)
-            else:
+            if string in self.current:
                 self.current[string].append(
                     string * min(self._min_len + self._index, self._max_len))
+            else:
+                self.current[string] = []
+                for i in range(self._min_len, min(self._min_len + self._index, self._max_len) + 1):
+                    self.current[string].append(string * i)
 
     def _calculate(self) -> dict[str, set[str]]:
         current_ref = self.reference.current
@@ -138,12 +139,14 @@ class Alternative:
                     for pfx in result:
                         temp.append((pfx[0] + sfx, {**pfx[1], element: sfx}))
             else:
-                reference = pfx[1][element.reference]
-                assert reference is not None
-                for sfx in element.next() if i == self._index % self._base else element.current:
-                    for pfx in result:
+                if i == self._index % self._base:
+                    element.next()
+                for pfx in result:
+                    reference = pfx[1][element.reference]
+                    assert reference is not None
+                    for sfx in element.current[reference]:
                         temp.append(
-                            (pfx[0] + sfx, {**pfx[1], element.reference: sfx}))
+                            (pfx[0] + sfx, pfx[1]))
             result = temp
             done = done and element.done
 
@@ -174,16 +177,16 @@ class Alternative:
                     for sfx in element.current:
                         temp.append((pfx[0] + sfx, pfx[1]))
             elif isinstance(element, RegexTree):
-                for pfx in result:    
+                for pfx in result:
                     for sfx in element.current:
                         temp.append((pfx[0] + sfx, {**pfx[1], element: sfx}))
             else:
-                reference = pfx[1][element.reference]
-                assert reference is not None
                 for pfx in result:
-                    for sfx in element.current:
+                    reference = pfx[1][element.reference]
+                    assert reference is not None
+                    for sfx in element.current[reference]:
                         temp.append(
-                            (pfx[0] + sfx, {**pfx[1], element.reference: sfx}))
+                            (pfx[0] + sfx, pfx[1]))
             result = temp
 
         self.done = done
