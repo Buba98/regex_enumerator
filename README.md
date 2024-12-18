@@ -1,5 +1,7 @@
 # Regex enumerator
-This library is ment to generate all the strings that match a given regex pattern. It is written in python and uses no external libraries.
+[![PyPI version](https://img.shields.io/pypi/v/regex-enumerator.svg)](https://pypi.org/project/regex-enumerator/)
+
+This library is meant to generate all the strings that match a given regex pattern. It is written in python and uses no external libraries.
 
 ## Installation
 ```bash
@@ -7,6 +9,8 @@ pip install regex-enumerator
 ```
 
 ## Usage
+Here's an example of how to use the library:
+
 ```python
 from regex_enumerator import RegexEnumerator
 
@@ -29,10 +33,10 @@ print(re.next()) # a2b
 - [x] Backreferences (named and unnamed)
 
 ## How it works
-This library works by parsing the regex pattern. Once the pattern is parsed, it performs a breadth-first search on the tree of the pattern. This ensures to be able to generate all the strings and don't get stuck on a unbounded quantifier for a character class or group.
+This library works by parsing the regex pattern into a tree structure. Once parsed, it performs a breadth-first search (BFS) on the tree to generate all matching strings. This ensures it does not get stuck on unbounded quantifiers for character classes or groups.
 
 ## Tests
-The library contains a test suite that can be run with the following command:
+The library includes a comprehensive test suite. To run the tests, use the following command:
 ```bash
 pytest
 ```
