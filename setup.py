@@ -1,8 +1,11 @@
 from setuptools import setup, find_packages
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 setup(
     name='regex_enumerator',
-    version='0.4.0',
+    version='0.4.1',
     packages=find_packages(include=['regex_enumerator', 'regex_enumerator.*']),
     description='Enumerate all strings that match a given regex',
     author='Vincenzo Greco',
@@ -13,4 +16,6 @@ setup(
     url='https://github.com/Buba98/regex_enumerator',
     keywords=['regex', 'regex enumerator', 'regular-expression', 'enumerator', 'string-generation',
               'exhaustive-matching', 'regex-testing', 'regex-tools', 'string-enumeration', 'data-generation'],
+    long_description=long_description,
+    long_description_content_type="text/markdown",
 )
