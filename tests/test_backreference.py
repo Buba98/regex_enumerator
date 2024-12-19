@@ -35,3 +35,10 @@ def test_backreference_with_named_group_and_quantifier():
     possibilities = ['aa', 'bb', 'aaa', 'bbb']
 
     f_finite(regexEnumerator, possibilities)
+
+
+def test_zero_width_backreference():
+    regexEnumerator = RegexEnumerator(r'(a)?\1{0}')
+    possibilities = ['a', '']
+
+    f_finite(regexEnumerator, possibilities)
