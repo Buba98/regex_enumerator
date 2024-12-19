@@ -13,7 +13,10 @@ class RegexError(Exception):
 
 
 class RegexParser:
-    charset = [chr(c) for c in range(32, 127)]
+    CHARSET = [chr(c) for c in range(32, 127)]
+    WORDS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
+    HEX = '0123456789abcdefABCDEF'
+    DIGITS = '0123456789'
 
     def __init__(self, regex: str):
         self.regex = regex
@@ -70,12 +73,12 @@ class RegexParser:
                     min_len, max_len = self._parseQuantifier()
                     elements.append(CharClasses(chars, min_len, max_len))
                 case '.':
-                    chars = list(self.charset)
+                    chars = list(self.CHARSET)
                     min_len, max_len = self._parseQuantifier()
                     elements.append(CharClasses(chars, min_len, max_len))
                 case '\\':
                     reference = self._parseBackReferenceLookahead()
-                    if reference == None:
+                    if reference is None:
                         chars = self._parseEscapeChar()
                         min_len, max_len = self._parseQuantifier()
                         elements.append(CharClasses(chars, min_len, max_len))
@@ -122,10 +125,10 @@ class RegexParser:
                     self._raise_error("Invalid back reference")
                 self.index += 1
                 return name
-            case char if char in '1234567890':
+            case char if char.isdigit():
                 num = int(char)
                 self.index += 1
-                while self.index < len(self.regex) and self.regex[self.index] in '0123456789':
+                while self.index < len(self.regex) and self.regex[self.index].isdigit():
                     num = num * 10 + int(self.regex[self.index])
                     self.index += 1
                 return num
@@ -139,21 +142,21 @@ class RegexParser:
         self.index += 1
 
         match char:
-            case 'd': return '0123456789'
-            case 'D': return ''.join([c for c in self.charset if c not in '0123456789'])
-            case 'w': return 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
-            case 'W': return ''.join([c for c in self.charset if c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'])
+            case 'd': return self.DIGITS
+            case 'D': return ''.join([c for c in self.CHARSET if not c.isdigit()])
+            case 'w': return self.WORDS
+            case 'W': return ''.join([c for c in self.CHARSET if c not in self.WORDS])
             case 's': return ' \t\n\r\f\v'
-            case 'S': return ''.join([c for c in self.charset if c not in ' \t\n\r\f\v'])
+            case 'S': return ''.join([c for c in self.CHARSET if c not in ' \t\n\r\f\v'])
             case 't': return '\t'
             case 'r': return '\r'
             case 'n': return '\n'
             case 'v': return '\v'
             case 'f': return '\f'
             case 'x':
-                if len(self.regex) < self.index + 1 or self.regex[self.index] not in '0123456789abcdefABCDEF':
+                if len(self.regex) < self.index + 1 or self.regex[self.index] not in self.HEX:
                     raise ValueError('Invalid escape character')
-                if len(self.regex) < self.index + 2 or self.regex[self.index + 1] not in '0123456789abcdefABCDEF':
+                if len(self.regex) < self.index + 2 or self.regex[self.index + 1] not in self.HEX:
                     num = int(self.regex[self.index], 16)
                     self.index += 1
                 else:
@@ -223,7 +226,7 @@ class RegexParser:
             chars_list.append(first_char)
 
         if negated:
-            chars_list = [c for c in self.charset if c not in chars_list]
+            chars_list = [c for c in self.CHARSET if c not in chars_list]
 
         return chars_list
 
@@ -249,13 +252,13 @@ class RegexParser:
                 return self._parseMinMax()
             case _: return 1, 1
 
-    def _parseMinMax(self) -> tuple[int, int]:
+    def _parseMinMax(self) -> tuple[int, int | None]:
         self._skipSpaces()
 
         min_len = 0
-        if self.index >= len(self.regex) or self.regex[self.index] not in '0123456789':
+        if self.index >= len(self.regex) or not self.regex[self.index].isdigit():
             self._raise_error("Invalid quantifier")
-        while self.index < len(self.regex) and self.regex[self.index] in '0123456789':
+        while self.index < len(self.regex) and self.regex[self.index].isdigit():
             min_len = min_len * 10 + int(self.regex[self.index])
             self.index += 1
 
@@ -263,10 +266,11 @@ class RegexParser:
 
         if self.index >= len(self.regex):
             self._raise_error("Invalid quantifier")
-        elif self.regex[self.index] == '}':
+
+        if self.regex[self.index] == '}':
             self.index += 1
             return min_len, min_len
-        elif self.regex[self.index] != ',':
+        if self.regex[self.index] != ',':
             self._raise_error("Invalid quantifier")
 
         self.index += 1
@@ -280,7 +284,7 @@ class RegexParser:
             return min_len, None
 
         max_len = 0
-        while self.index < len(self.regex) and self.regex[self.index] in '0123456789':
+        while self.index < len(self.regex) and self.regex[self.index].isdigit():
             max_len = max_len * 10 + int(self.regex[self.index])
             self.index += 1
 

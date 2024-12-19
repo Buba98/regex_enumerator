@@ -218,7 +218,7 @@ class RegexTree:
             self._gen_charset = True
 
         if self._gen_charset:
-            next_charset: set[str] = self._next_charset()
+            _: set[str] = self._next_charset()
             # optimize it by using only the new charset
         else:
             if not self._done_repetition:

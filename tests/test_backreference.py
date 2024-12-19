@@ -22,11 +22,13 @@ def test_backreference_with_quantifier():
 
     f_infinite(regexEnumerator, possibilities)
 
+
 def test_backreference_with_named_group():
     regexEnumerator = RegexEnumerator(r'(?<name>[a-b])\k<name>')
     possibilities = ['aa', 'bb']
 
     f_finite(regexEnumerator, possibilities)
+
 
 def test_backreference_with_named_group_and_quantifier():
     regexEnumerator = RegexEnumerator(r'(?<name>[a-b])\k<name>{1, 2}')
