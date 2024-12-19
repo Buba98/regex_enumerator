@@ -117,3 +117,19 @@ def test_escaped_characters_inside_character_class():
     possibilities = ['[', ']']
 
     f_finite(regexEnumerator, possibilities)
+
+
+def test_escaped_char_interrups_range_after_divider():
+    regexEnumerator = RegexEnumerator(r'[a-\d]')
+    possibilities = ['a', '-', '0', '1', '2',
+                     '3', '4', '5', '6', '7', '8', '9']
+
+    f_finite(regexEnumerator, possibilities)
+
+
+def test_escaped_char_interrups_range_after_1st_char():
+
+    regexEnumerator = RegexEnumerator(r'[\[\d]')
+    possibilities = ['[', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+    f_finite(regexEnumerator, possibilities)
