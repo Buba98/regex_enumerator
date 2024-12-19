@@ -133,3 +133,10 @@ def test_escaped_char_interrups_range_after_1st_char():
     possibilities = ['[', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
     f_finite(regexEnumerator, possibilities)
+
+
+def test_escaped_unicode_literal():
+    regexEnumerator = RegexEnumerator(r'\u00E0')
+    possibilities = ['à']
+
+    f_finite(regexEnumerator, possibilities)

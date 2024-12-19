@@ -17,6 +17,11 @@ def test_single_wildcard():
     f_finite(regexEnumerator, possibilities)
 
 
+def test_wildcard_with_unicode():
+    regexEnumerator = RegexEnumerator(r'.', additional_charset='¡¢£')
+    possibilities = [chr(i) for i in range(32, 127)] + ['¡', '¢', '£']
+
+
 def test_done():
     regexEnumerator = RegexEnumerator(r'')
     possibilities = ['', None]

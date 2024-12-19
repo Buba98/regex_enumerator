@@ -107,3 +107,10 @@ def test_2_ranges():
     possibilities = ['1', 'a', 'b', 'c', 'f', 'g', 'r', '3']
 
     f_finite(regexEnumerator, possibilities)
+
+
+def test_unicode_character_class():
+    regexEnumerator = RegexEnumerator(r'[à-å]')
+    possibilities = ['à', 'á', 'â', 'ã', 'ä', 'å']
+
+    f_finite(regexEnumerator, possibilities)

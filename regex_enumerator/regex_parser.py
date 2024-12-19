@@ -1,6 +1,5 @@
 from .regex_tree import Alternative, BackReference, CharClasses, RegexTree
 
-
 class RegexError(Exception):
     def __init__(self, regex: str, index: int, message: str):
         self.regex = regex
@@ -13,13 +12,13 @@ class RegexError(Exception):
 
 
 class RegexParser:
-    CHARSET = [chr(c) for c in range(32, 127)]
     WORDS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
     HEX = '0123456789abcdefABCDEF'
     DIGITS = '0123456789'
 
-    def __init__(self, regex: str):
+    def __init__(self, regex: str, charset: str):
         self.regex = regex
+        self.charset = charset
 
     def parse(self) -> RegexTree:
         self.index = 0
@@ -73,7 +72,7 @@ class RegexParser:
                     min_len, max_len = self._parseQuantifier()
                     elements.append(CharClasses(chars, min_len, max_len))
                 case '.':
-                    chars = list(self.CHARSET)
+                    chars = list(self.charset)
                     min_len, max_len = self._parseQuantifier()
                     elements.append(CharClasses(chars, min_len, max_len))
                 case '\\':
@@ -143,11 +142,11 @@ class RegexParser:
 
         match char:
             case 'd': return self.DIGITS
-            case 'D': return ''.join([c for c in self.CHARSET if not c.isdigit()])
+            case 'D': return ''.join([c for c in self.charset if not c.isdigit()])
             case 'w': return self.WORDS
-            case 'W': return ''.join([c for c in self.CHARSET if c not in self.WORDS])
+            case 'W': return ''.join([c for c in self.charset if c not in self.WORDS])
             case 's': return ' \t\n\r\f\v'
-            case 'S': return ''.join([c for c in self.CHARSET if c not in ' \t\n\r\f\v'])
+            case 'S': return ''.join([c for c in self.charset if c not in ' \t\n\r\f\v'])
             case 't': return '\t'
             case 'r': return '\r'
             case 'n': return '\n'
@@ -165,6 +164,17 @@ class RegexParser:
                 if num < 32 or num > 126:
                     self._raise_error(f"Invalid escape character {num}")
                 return chr(num)
+            case 'u':
+                code = []
+                for _ in range(4):
+                    if len(self.regex) <= self.index or self.regex[self.index] not in self.HEX:
+                        self._raise_error("Invalid escape character")
+                    code.append(self.regex[self.index])
+                    self.index += 1
+                num = int(''.join(code), 16)
+                return chr(num)
+            case 'p' | 'P':
+                self._raise_error("Unicode property not supported")
             case _: return char
 
     def _parseCharClass(self) -> list[str]:
@@ -226,7 +236,7 @@ class RegexParser:
             chars_list.append(first_char)
 
         if negated:
-            chars_list = [c for c in self.CHARSET if c not in chars_list]
+            chars_list = [c for c in self.charset if c not in chars_list]
 
         return chars_list
 
