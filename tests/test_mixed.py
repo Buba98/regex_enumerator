@@ -23,8 +23,10 @@ def test_done():
 
     f_finite(regexEnumerator, possibilities)
 
+
 def test_weak_password():
-    regexEnumerator = RegexEnumerator(r'[Ll][Oo0][Vv][Ee3]([Yy][Oo0][Uu])?(2023|2024)[!1.]{1,2}')
+    regexEnumerator = RegexEnumerator(
+        r'[Ll][Oo0][Vv][Ee3]([Yy][Oo0][Uu])?(2023|2024)[!1.]{1,2}')
     possibilities = []
 
     you_or_not = []
@@ -34,7 +36,7 @@ def test_weak_password():
                 you_or_not.append(y + o + u)
     you_or_not.append('')
 
-    for l in 'Ll':
+    for l_char in 'Ll':
         for o in 'Oo0':
             for v in 'Vv':
                 for e in 'Ee3':
@@ -42,6 +44,7 @@ def test_weak_password():
                         for year in ['2023', '2024']:
                             for special_1 in ['!', '1', '.']:
                                 for special_2 in ['!', '1', '.', '']:
-                                    possibilities.append(l + o + v + e + y + year + special_1 + special_2)
+                                    possibilities.append(
+                                        l_char + o + v + e + y + year + special_1 + special_2)
 
     f_finite(regexEnumerator, possibilities)
