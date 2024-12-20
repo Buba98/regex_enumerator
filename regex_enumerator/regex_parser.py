@@ -16,6 +16,7 @@ class RegexParser:
     WORDS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
     HEX = '0123456789abcdefABCDEF'
     DIGITS = '0123456789'
+    SPACES = ' \t\n\r\f\v'
 
     def __init__(self, regex: str, charset: str):
         self.regex = regex
@@ -153,8 +154,8 @@ class RegexParser:
             case 'D': return ''.join([c for c in self.charset if not c.isdigit()])
             case 'w': return self.WORDS
             case 'W': return ''.join([c for c in self.charset if c not in self.WORDS])
-            case 's': return ' \t\n\r\f\v'
-            case 'S': return ''.join([c for c in self.charset if c not in ' \t\n\r\f\v'])
+            case 's': return self.SPACES
+            case 'S': return ''.join([c for c in self.charset if c not in self.SPACES])
             case 't': return '\t'
             case 'r': return '\r'
             case 'n': return '\n'
@@ -244,7 +245,8 @@ class RegexParser:
             chars_list.append(first_char)
 
         if negated:
-            chars_list = [c for c in self.charset if c not in chars_list]
+            chars_list = [
+                c for c in self.charset if c not in ''.join(chars_list)]
 
         return chars_list
 
