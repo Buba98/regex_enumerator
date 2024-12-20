@@ -1,5 +1,6 @@
 from .regex_tree import Alternative, BackReference, CharClasses, RegexTree
 
+
 class RegexError(Exception):
     def __init__(self, regex: str, index: int, message: str):
         self.regex = regex
@@ -8,7 +9,7 @@ class RegexError(Exception):
 
     def __str__(self):
         caret_line = ' ' * self.index + '^'
-        return f"{self.regex}\n{caret_line}\n{self.message}"
+        return f"\n{self.regex}\n{caret_line}\n{self.message}"
 
 
 class RegexParser:
@@ -36,25 +37,32 @@ class RegexParser:
             self.index += 1
             match char:
                 case'(':
-                    name = None
                     if self.index < len(self.regex) and self.regex[self.index] == '?':
                         self.index += 1
-                        if self.index >= len(self.regex) or self.regex[self.index] != '<':
+                        if self.index >= len(self.regex):
                             self._raise_error("Invalid named group")
-                        self.index += 1
-                        name = ''
-                        while self.index < len(self.regex) and self.regex[self.index] != '>':
-                            name += self.regex[self.index]
+                        elif self.regex[self.index] == '<':
                             self.index += 1
-                        if self.index >= len(self.regex) or self.regex[self.index] != '>' or name == '':
-                            self._raise_error("Invalid named group")
-                        self.index += 1
-                        if name in named_groups:
-                            self._raise_error("Duplicate named group")
-                    subTree = self._parseRegex(True)
-                    if name is not None:
-                        named_groups[name] = subTree
-                    ordered_groups.append(subTree)
+                            name = ''
+                            while self.index < len(self.regex) and self.regex[self.index] != '>':
+                                name += self.regex[self.index]
+                                self.index += 1
+                            if self.index >= len(self.regex) or self.regex[self.index] != '>' or name == '':
+                                self._raise_error("Invalid named group")
+                            self.index += 1
+                            if name in named_groups:
+                                self._raise_error("Duplicate named group")
+                            subTree = self._parseRegex(True)
+                            named_groups[name] = subTree
+                            ordered_groups.append(subTree)
+                        elif self.regex[self.index] == ':':
+                            self.index += 1
+                            subTree = self._parseRegex(True)
+                        else:
+                            self._raise_error("Invalid group")
+                    else:
+                        subTree = self._parseRegex(True)
+                        ordered_groups.append(subTree)
                     elements.append(subTree)
                 case ')':
                     if not to_close:

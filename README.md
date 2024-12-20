@@ -35,11 +35,11 @@ print(re.next()) # a2b
 - [x] Alternation
 - [x] Escaped characters
 - [x] Backreferences (named and unnamed)
+- [x] Non-capturing groups
 
 ## What I plan to support
 
 - [ ] Lookahead and lookbehind
-- [ ] Non-capturing groups
 
 ## What is not supported
 

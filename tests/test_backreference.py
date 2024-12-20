@@ -42,3 +42,9 @@ def test_zero_width_backreference():
     possibilities = ['a', '']
 
     f_finite(regexEnumerator, possibilities)
+
+def test_10_backreference():
+    regexEnumerator = RegexEnumerator(r'(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)\10')
+    possibilities = ['abcdefghijj']
+
+    f_finite(regexEnumerator, possibilities)
