@@ -7,6 +7,7 @@ def f_finite(regexEnumerator: RegexEnumerator, possibilities: list[str]):
         assert res in possibilities, f"'{res}' is not in the possibilities."
         possibilities.remove(res)
 
+    assert regexEnumerator.next() is None
     assert regexEnumerator.done
 
 

@@ -211,16 +211,15 @@ class RegexTree:
 
     def _calculate_using_new_charset(self) -> set[str]:
         assert not self.done
+        assert self._index_repetition + self._min_len != 0
         if self._done_repetition and self._done_charset:
             self.done = True
 
-        if self._index_repetition + self._min_len == 0:
-            return {''}
-
         result = set(self._current_chars)
         for _ in range(1, self._min_len + self._index_repetition):
-            result.update({pfx + sfx for pfx in result for sfx in self._current_chars})
-                
+            result.update(
+                {pfx + sfx for pfx in result for sfx in self._current_chars})
+
         return result
 
     def next(self) -> set[str]:

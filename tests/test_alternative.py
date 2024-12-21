@@ -63,3 +63,9 @@ def test_alternation_with_grouping():
     possibilities = ['abd', 'acd', 'x']
     
     f_finite(regexEnumerator, possibilities)
+
+def test_same_alternative_twice():
+    regexEnumerator = RegexEnumerator(r'a{1,2}|a{1,2}')
+    possibilities = ['a', 'aa']
+
+    f_finite(regexEnumerator, possibilities)
