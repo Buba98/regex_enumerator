@@ -42,3 +42,24 @@ def test_alternative_with_character_class_and_literal():
     possibilities = ['', 'd']
 
     f_finite(regexEnumerator, possibilities)
+
+
+def test_alternation_with_character_classes_and_literals():
+    regexEnumerator = RegexEnumerator(r'(a|[0-2])')
+    possibilities = ['a', '0', '1', '2']
+
+    f_finite(regexEnumerator, possibilities)
+
+
+def test_nested_alternation():
+    regexEnumerator = RegexEnumerator(r'((a|b)|c)')
+    possibilities = ['a', 'b', 'c']
+    
+    f_finite(regexEnumerator, possibilities)
+
+
+def test_alternation_with_grouping():
+    regexEnumerator = RegexEnumerator(r'(a(b|c)d|x)')
+    possibilities = ['abd', 'acd', 'x']
+    
+    f_finite(regexEnumerator, possibilities)

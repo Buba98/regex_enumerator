@@ -29,8 +29,7 @@ print(re.next()) # a2b
 ## What is supported
 
 - [x] Character classes
-- [x] Quantifiers for character classes
-- [x] Quantifiers for groups
+- [x] Quantifiers (greedy)
 - [x] Groups (named and unnamed)
 - [x] Alternation
 - [x] Escaped characters

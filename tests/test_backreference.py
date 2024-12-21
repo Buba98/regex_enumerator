@@ -43,8 +43,41 @@ def test_zero_width_backreference():
 
     f_finite(regexEnumerator, possibilities)
 
+
 def test_10_backreference():
     regexEnumerator = RegexEnumerator(r'(a)(b)(c)(d)(e)(f)(g)(h)(i)(j)\10')
     possibilities = ['abcdefghijj']
 
     f_finite(regexEnumerator, possibilities)
+
+
+def test_multiple_backreferences():
+    regexEnumerator = RegexEnumerator(r'(a)(b)\2\1')
+    possibilities = ['abba']
+
+    f_finite(regexEnumerator, possibilities)
+
+
+def test_backreference_with_mismatch():
+    regexEnumerator = RegexEnumerator(r'(a)(b)\1')
+    possibilities = ['aba']
+
+    f_finite(regexEnumerator, possibilities)
+
+
+def test_named_group_with_backreference():
+    regexEnumerator = RegexEnumerator(r'(?<letter>[ab])\k<letter>')
+    possibilities = [
+        'aa', 'bb'
+    ]
+
+    f_finite(regexEnumerator, possibilities)
+
+
+def test_named_group_infinite_repetition_with_backreference():
+    regexEnumerator = RegexEnumerator(r'(?<letter>[ab])+\k<letter>')
+    possibilities = [
+        'aa', 'bb', 'abab', 'baba', 'aaaa', 'bbbb'
+    ]
+
+    f_infinite(regexEnumerator, possibilities)

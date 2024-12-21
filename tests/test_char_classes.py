@@ -114,3 +114,12 @@ def test_unicode_character_class():
     possibilities = ['à', 'á', 'â', 'ã', 'ä', 'å']
 
     f_finite(regexEnumerator, possibilities)
+
+
+def test_additional_charset():
+    regexEnumerator = RegexEnumerator(
+        r'[^\w\d\s]', additional_charset=['γ', 'β', 'α'])
+    possibilities = ['!', '"', '#', '$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', ':',
+                     ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '`', '{', '|', '}', '~', 'α', 'β', 'γ']
+
+    f_finite(regexEnumerator, possibilities)

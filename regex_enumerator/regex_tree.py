@@ -209,6 +209,20 @@ class RegexTree:
             return
         self.references.append(reference)
 
+    def _calculate_using_new_charset(self) -> set[str]:
+        assert not self.done
+        if self._done_repetition and self._done_charset:
+            self.done = True
+
+        if self._index_repetition + self._min_len == 0:
+            return {''}
+
+        result = set(self._current_chars)
+        for _ in range(1, self._min_len + self._index_repetition):
+            result.update({pfx + sfx for pfx in result for sfx in self._current_chars})
+                
+        return result
+
     def next(self) -> set[str]:
         assert not self.done
 
@@ -219,12 +233,13 @@ class RegexTree:
 
         if self._gen_charset:
             _: set[str] = self._next_charset()
-            # optimize it by using only the new charset
+            # Optimization: use the new charset to calculate the next set of strings
+            res: set[str] = self._calculate_using_new_charset()
         else:
             if not self._done_repetition:
                 self._index_repetition += 1
+            res: set[str] = self._calculate()
 
-        res: set[str] = self._calculate()
         self._gen_charset = not self._gen_charset
         new_res = res - self.current
         if len(new_res) == 0:
