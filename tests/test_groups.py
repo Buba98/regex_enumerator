@@ -112,13 +112,12 @@ def test_group_with_multiple_elements_with_qunatifiers():
     possibilities = ['']
     char_class = ['', 'b', 'c', 'd', 'bb', 'bc',
                   'bd', 'cb', 'cc', 'cd', 'db', 'dc', 'dd']
-    one_group = [f'a{c}' for c in char_class]
-    two_groups = [f'a{c1}a{c2}' for c1 in char_class for c2 in char_class]
-    three_groups = [f'a{c1}a{c2}a{
-        c3}' for c1 in char_class for c2 in char_class for c3 in char_class]
-    possibilities.extend(one_group)
-    possibilities.extend(two_groups)
-    possibilities.extend(three_groups)
+    one = [f'a{c}' for c in char_class]
+    two = [f'{c1}{c2}' for c1 in one for c2 in one]
+    three = [f'{c1}{c2}{c3}' for c1 in one for c2 in one for c3 in one]
+    possibilities.extend(one)
+    possibilities.extend(two)
+    possibilities.extend(three)
 
     f_finite(regexEnumerator, set(possibilities))
 
