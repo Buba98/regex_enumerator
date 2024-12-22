@@ -128,12 +128,11 @@ def test_nested_groups_with_multiple_elements_with_quantifiers():
     possibilities = ['']
     group = ['e', 'f', 'g', 'ee', 'ef', 'eg', 'fe', 'ff', 'fg', 'ge', 'gf', 'gg', 'eee', 'eef', 'eeg', 'efe', 'eff', 'efg', 'ege', 'egf', 'egg',
              'fee', 'fef', 'feg', 'ffe', 'fff', 'ffg', 'fge', 'fgf', 'fgg', 'gee', 'gef', 'geg', 'gfe', 'gff', 'gfg', 'gge', 'ggf', 'ggg']
-    one_group = [f'a{g}' for g in group]
-    two_groups = [f'a{g1}a{g2}' for g1 in group for g2 in group]
-    three_groups = [f'a{g1}a{g2}a{
-        g3}' for g1 in group for g2 in group for g3 in group]
-    possibilities.extend(one_group)
-    possibilities.extend(two_groups)
-    possibilities.extend(three_groups)
+    one = [f'a{g}' for g in group]
+    two = [f'{g1}{g2}' for g1 in one for g2 in one]
+    three = [f'{g1}{g2}{g3}' for g1 in one for g2 in one for g3 in one]
+    possibilities.extend(one)
+    possibilities.extend(two)
+    possibilities.extend(three)
 
     f_finite(regexEnumerator, set(possibilities))
