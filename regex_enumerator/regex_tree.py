@@ -27,21 +27,21 @@ class CharClasses:
         if self._base == 1:
             return self._chars[0] * (self._min_len + self._index)
 
-        res = []
+        result = []
         num = self._base ** self._min_len + self._index
         while num > 1:
-            res.append(self._chars[num % self._base])
+            result.append(self._chars[num % self._base])
             num //= self._base
 
-        return ''.join(reversed(res))
+        return ''.join(reversed(result))
 
     def next(self) -> set[str]:
         assert not self.done
 
         self._index += 1
-        res = self._calculate()
-        self.current.add(res)
-        return {res}
+        new_value = self._calculate()
+        self.current.add(new_value)
+        return {new_value}
 
 
 class BackReference:
@@ -105,20 +105,22 @@ class Alternative:
         assert not self.done
         assert not isinstance(self._elements[0], BackReference)
 
-        self._index += 1
-        for i in range(self._index, self._index + self._base):
-            if self._elements[i % self._base].done:
-                self._index += 1
-            else:
-                break
+        index = self._index + 1
+        if index >= self._base:
+            index = 0
+        while self._elements[index].done:
+            index += 1
+            if index >= self._base:
+                index = 0
 
+        self._index = index
         result: list[tuple[str, dict[RegexTree, str]]] = []
 
         if isinstance(self._elements[0], CharClasses):
-            for string in self._elements[0].next() if self._index % self._base == 0 else self._elements[0].current:
+            for string in self._elements[0].next() if index == 0 else self._elements[0].current:
                 result.append((string, {}))
         else:
-            for string in self._elements[0].next() if self._index % self._base == 0 else self._elements[0].current:
+            for string in self._elements[0].next() if index == 0 else self._elements[0].current:
                 result.append((string, {self._elements[0]: string}))
 
         done = self._elements[0].done
@@ -126,15 +128,15 @@ class Alternative:
         for i, element in enumerate(self._elements[1:], start=1):
             temp = []
             if isinstance(element, CharClasses):
-                for sfx in element.next() if i == self._index % self._base else element.current:
+                for sfx in element.next() if i == index else element.current:
                     for pfx in result:
                         temp.append((pfx[0] + sfx, pfx[1]))
             elif isinstance(element, RegexTree):
-                for sfx in element.next() if i == self._index % self._base else element.current:
+                for sfx in element.next() if i == index else element.current:
                     for pfx in result:
                         temp.append((pfx[0] + sfx, {**pfx[1], element: sfx}))
             else:
-                if i == self._index % self._base:
+                if i == index:
                     element.next()
                 for pfx in result:
                     reference = pfx[1][element.reference]
@@ -146,9 +148,9 @@ class Alternative:
             done = done and element.done
 
         self.done = done
-        new_res = {struct[0] for struct in result} - self.current
-        self.current.update(new_res)
-        return new_res
+        new_strings = {struct[0] for struct in result} - self.current
+        self.current.update(new_strings)
+        return new_strings
 
     def _calculate(self) -> set[str]:
         assert not isinstance(self._elements[0], BackReference)
@@ -233,20 +235,20 @@ class RegexTree:
         if self._gen_charset:
             _: set[str] = self._next_charset()
             # Optimization: use the new charset to calculate the next set of strings
-            res: set[str] = self._calculate_using_new_charset()
+            result: set[str] = self._calculate_using_new_charset()
         else:
             if not self._done_repetition:
                 self._index_repetition += 1
-            res: set[str] = self._calculate()
+            result: set[str] = self._calculate()
 
         self._gen_charset = not self._gen_charset
-        new_res = res - self.current
-        if len(new_res) == 0:
-            return new_res
+        result -= self.current
+        if len(result) == 0:
+            return result
 
-        self.current.update(new_res)
+        self.current.update(result)
         if len(self.references) == 0:
-            return new_res
+            return result
 
         for reference in self.references:
             reference.update()
@@ -270,34 +272,28 @@ class RegexTree:
     def _next_charset(self) -> set[str]:
         assert not self._done_charset
 
-        self._index_charset += 1
+        index_charset = self._index_charset + 1
+        if index_charset >= self._base:
+            index_charset = 0
+        while self._alternatives[index_charset].done:
+            index_charset += 1
+            if index_charset >= self._base:
+                index_charset = 0
 
-        for i in range(self._index_charset, self._index_charset + self._base):
-            if self._alternatives[i % self._base].done:
-                self._index_charset += 1
-            else:
-                break
-
-        res = self._alternatives[self._index_charset % self._base].next()
-        done_charset = True
-
-        for alternative in self._alternatives:
-            if not alternative.done:
-                done_charset = False
-                break
-
-        new_res = res - self._current_chars
-        self._current_chars.update(new_res)
-        self._done_charset = done_charset
-        return new_res
+        self._index_charset = index_charset
+        new_chars = self._alternatives[index_charset].next()
+        self._done_charset = all(alt.done for alt in self._alternatives)
+        new_chars -= self._current_chars
+        self._current_chars.update(new_chars)
+        return new_chars
 
     def _calculate_chars(self) -> set[str]:
-        res = set()
+        result = set()
         done_charset = True
 
         for alternative in self._alternatives:
-            res.update(alternative.current)
+            result.update(alternative.current)
             done_charset = done_charset and alternative.done
 
         self._done_charset = done_charset
-        return res
+        return result
