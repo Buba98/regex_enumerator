@@ -99,8 +99,41 @@ def test_group_for_quantifier_scope():
 
     f_infinite(regexEnumerator, possibilities)
 
+
 def test_group_with_char_class_infinite_repetition():
     regexEnumerator = RegexEnumerator(r'([ab])+')
     possibilities = ['a', 'b', 'aa', 'ab', 'ba', 'bb']
 
     f_infinite(regexEnumerator, possibilities)
+
+
+def test_group_with_multiple_elements_with_qunatifiers():
+    regexEnumerator = RegexEnumerator(r'(a[b-d]{0,2}){0, 3}')
+    possibilities = ['']
+    char_class = ['', 'b', 'c', 'd', 'bb', 'bc',
+                  'bd', 'cb', 'cc', 'cd', 'db', 'dc', 'dd']
+    one_group = [f'a{c}' for c in char_class]
+    two_groups = [f'a{c1}a{c2}' for c1 in char_class for c2 in char_class]
+    three_groups = [f'a{c1}a{c2}a{
+        c3}' for c1 in char_class for c2 in char_class for c3 in char_class]
+    possibilities.extend(one_group)
+    possibilities.extend(two_groups)
+    possibilities.extend(three_groups)
+
+    f_finite(regexEnumerator, set(possibilities))
+
+
+def test_nested_groups_with_multiple_elements_with_quantifiers():
+    regexEnumerator = RegexEnumerator(r'(a([e-g]){1, 3}){0, 3}')
+    possibilities = ['']
+    group = ['e', 'f', 'g', 'ee', 'ef', 'eg', 'fe', 'ff', 'fg', 'ge', 'gf', 'gg', 'eee', 'eef', 'eeg', 'efe', 'eff', 'efg', 'ege', 'egf', 'egg',
+             'fee', 'fef', 'feg', 'ffe', 'fff', 'ffg', 'fge', 'fgf', 'fgg', 'gee', 'gef', 'geg', 'gfe', 'gff', 'gfg', 'gge', 'ggf', 'ggg']
+    one_group = [f'a{g}' for g in group]
+    two_groups = [f'a{g1}a{g2}' for g1 in group for g2 in group]
+    three_groups = [f'a{g1}a{g2}a{
+        g3}' for g1 in group for g2 in group for g3 in group]
+    possibilities.extend(one_group)
+    possibilities.extend(two_groups)
+    possibilities.extend(three_groups)
+
+    f_finite(regexEnumerator, set(possibilities))

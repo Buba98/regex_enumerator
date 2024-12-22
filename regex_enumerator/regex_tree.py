@@ -11,14 +11,22 @@ class CharClasses:
         self._base = len(self._chars)
         self.done = self._base == 0 or self._max_len == 0
         self._max_index = self._calculate_max_index()
-        self.current: set[str] = {self._calculate()} if not self.done else {''}
+        if self._base >= 1:
+            self._start = self._base ** max(self._min_len, 1)
+        if self.done:
+            self.current: list[str] = ['']
+            return
+
+        self.current = [self._calculate()]
+        if self._min_len == 0:
+            self.current.append('')
 
     def _calculate_max_index(self) -> int | None:
         if self._max_len is None or self.done:
             return None
         if self._base == 1:
             return self._max_len - self._min_len
-        return ((self._base ** self._min_len - self._base ** (self._max_len + 1)) // (1 - self._base)) - 1
+        return ((self._base ** max(self._min_len, 1) - self._base ** (self._max_len + 1)) // (1 - self._base)) - 1
 
     def _calculate(self) -> str:
         if self._max_len is not None and self._index >= self._max_index:
@@ -28,7 +36,7 @@ class CharClasses:
             return self._chars[0] * (self._min_len + self._index)
 
         result = []
-        num = self._base ** self._min_len + self._index
+        num = self._start + self._index
         while num > 1:
             result.append(self._chars[num % self._base])
             num //= self._base
@@ -40,8 +48,9 @@ class CharClasses:
 
         self._index += 1
         new_value = self._calculate()
-        self.current.add(new_value)
-        return {new_value}
+        assert new_value not in self.current
+        self.current.append(new_value)
+        return [new_value]
 
 
 class BackReference:
@@ -217,10 +226,13 @@ class RegexTree:
         if self._done_repetition and self._done_charset:
             self.done = True
 
-        result = set(self._current_chars)
-        for _ in range(1, self._min_len + self._index_repetition):
-            result.update(
-                {pfx + sfx for pfx in result for sfx in self._current_chars})
+        result = set()
+        for i in range(self._min_len + self._index_repetition):
+            temp = set(self._current_chars)
+            for _ in range(i):
+                temp.update(
+                    {pfx + sfx for pfx in temp for sfx in self._current_chars})
+            result.update(temp)
 
         return result
 

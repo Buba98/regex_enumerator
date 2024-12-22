@@ -123,3 +123,9 @@ def test_additional_charset():
                      ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '`', '{', '|', '}', '~', 'α', 'β', 'γ']
 
     f_finite(regexEnumerator, possibilities)
+
+def test_charclass_with_quantifier_from_0():
+    regexEnumerator = RegexEnumerator(r'[b-d]{0,2}')
+    possibilities = ['', 'b', 'c', 'd', 'bb', 'bc', 'bd', 'cb', 'cc', 'cd', 'db', 'dc', 'dd']
+
+    f_finite(regexEnumerator, set(possibilities))
