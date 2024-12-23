@@ -2,34 +2,34 @@ from regex_enumerator import RegexEnumerator
 from .test_function import f_finite
 
 
-def test_character_class_between_literals(benchmark):
+def test_character_class_between_literals():
     regexEnumerator = RegexEnumerator(r'a[0-9]b')
     possibilities = ['a0b', 'a1b', 'a2b', 'a3b',
                      'a4b', 'a5b', 'a6b', 'a7b', 'a8b', 'a9b']
 
-    benchmark(f_finite, regexEnumerator, possibilities)
+    f_finite(regexEnumerator, possibilities)
 
 
-def test_single_wildcard(benchmark):
+def test_single_wildcard():
     regexEnumerator = RegexEnumerator(r'.')
     possibilities = [chr(i) for i in range(32, 127)]
 
-    benchmark(f_finite, regexEnumerator, possibilities)
+    f_finite(regexEnumerator, possibilities)
 
 
-def test_wildcard_with_unicode(benchmark):
+def test_wildcard_with_unicode():
     regexEnumerator = RegexEnumerator(r'.', additional_charset='¡¢£')
     possibilities = [chr(i) for i in range(32, 127)] + ['¡', '¢', '£']
 
 
-def test_done(benchmark):
+def test_done():
     regexEnumerator = RegexEnumerator(r'')
     possibilities = ['', None]
 
-    benchmark(f_finite, regexEnumerator, possibilities)
+    f_finite(regexEnumerator, possibilities)
 
 
-def test_weak_password(benchmark):
+def test_weak_password():
     regexEnumerator = RegexEnumerator(
         r'[Ll][Oo0][Vv][Ee3]([Yy][Oo0][Uu])?(2023|2024)[!1.]{1,2}')
     possibilities = []
@@ -52,4 +52,4 @@ def test_weak_password(benchmark):
                                     possibilities.append(
                                         l_char + o + v + e + y + year + special_1 + special_2)
 
-    benchmark(f_finite, regexEnumerator, possibilities)
+    f_finite(regexEnumerator, possibilities)
