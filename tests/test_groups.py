@@ -2,112 +2,112 @@ from regex_enumerator import RegexEnumerator
 from .test_function import f_finite, f_infinite
 
 
-def test_single_capturing_group_with_literal():
+def test_single_capturing_group_with_literal(benchmark):
     regexEnumerator = RegexEnumerator(r'(a)')
     possibilities = ['a']
 
-    f_finite(regexEnumerator, possibilities)
+    benchmark(f_finite, regexEnumerator, possibilities)
 
 
-def test_single_capturing_group_with_class_single_char():
+def test_single_capturing_group_with_class_single_char(benchmark):
     regexEnumerator = RegexEnumerator(r'([a])')
     possibilities = ['a']
 
-    f_finite(regexEnumerator, possibilities)
+    benchmark(f_finite, regexEnumerator, possibilities)
 
 
-def test_single_capturing_group_with_class_multi_char():
+def test_single_capturing_group_with_class_multi_char(benchmark):
     regexEnumerator = RegexEnumerator(r'([a-c])')
     possibilities = ['a', 'b', 'c']
 
-    f_finite(regexEnumerator, possibilities)
+    benchmark(f_finite, regexEnumerator, possibilities)
 
 
-def test_capturing_group_with_star_quantifier():
+def test_capturing_group_with_star_quantifier(benchmark):
     regexEnumerator = RegexEnumerator(r'(a)*')
     possibilities = ['', 'a', 'aa', 'aaa', 'aaaa', 'aaaaa']
 
-    f_infinite(regexEnumerator, possibilities)
+    benchmark(f_infinite, regexEnumerator, possibilities)
 
 
-def test_named_capturing_group_with_optional_subgroup():
+def test_named_capturing_group_with_optional_subgroup(benchmark):
     regexEnumerator = RegexEnumerator(r'(?<name>a[bcd](e)?)')
     possibilities = ['ab', 'abe', 'ac', 'ace', 'ad', 'ade']
 
-    f_finite(regexEnumerator, possibilities)
+    benchmark(f_finite, regexEnumerator, possibilities)
 
 
-def test_literal_followed_by_group_with_star_quantifier():
+def test_literal_followed_by_group_with_star_quantifier(benchmark):
     regexEnumerator = RegexEnumerator(r'a(b)*')
     possibilities = ['a' + 'b' * i for i in range(6)]
 
-    f_infinite(regexEnumerator, possibilities)
+    benchmark(f_infinite, regexEnumerator, possibilities)
 
 
-def test_two_capturing_groups_with_star_quantifiers():
+def test_two_capturing_groups_with_star_quantifiers(benchmark):
     regexEnumerator = RegexEnumerator(r'(a)*(b)*')
     possibilities = ['a' * i + 'b' * j for i in range(6) for j in range(6)]
 
-    f_infinite(regexEnumerator, possibilities)
+    benchmark(f_infinite, regexEnumerator, possibilities)
 
 
-def test_nested_capturing_groups():
+def test_nested_capturing_groups(benchmark):
     regexEnumerator = RegexEnumerator(r'(a(b(c)))')
     possibilities = ['abc']
 
-    f_finite(regexEnumerator, possibilities)
+    benchmark(f_finite, regexEnumerator, possibilities)
 
 
-def test_capturing_groups_in_sequence():
+def test_capturing_groups_in_sequence(benchmark):
     regexEnumerator = RegexEnumerator(r'((a)(b))')
     possibilities = ['ab']
 
-    f_finite(regexEnumerator, possibilities)
+    benchmark(f_finite, regexEnumerator, possibilities)
 
 
-def test_non_capturing_group():
+def test_non_capturing_group(benchmark):
     regexEnumerator = RegexEnumerator(r'(?:a|b)*')
     possibilities = ['', 'a', 'b', 'aa', 'ab', 'ba', 'bb']
 
-    f_infinite(regexEnumerator, possibilities)
+    benchmark(f_infinite, regexEnumerator, possibilities)
 
 
-def test_non_capturing_group_with_quantifier():
+def test_non_capturing_group_with_quantifier(benchmark):
     regexEnumerator = RegexEnumerator(r'(?:ab)+')
     possibilities = ['ab', 'abab', 'ababab']
 
-    f_infinite(regexEnumerator, possibilities)
+    benchmark(f_infinite, regexEnumerator, possibilities)
 
 
-def test_named_capturing_group_with_quantifier():
+def test_named_capturing_group_with_quantifier(benchmark):
     regexEnumerator = RegexEnumerator(r'(?<chars>[ab]{1,2})')
     possibilities = ['a', 'b', 'aa', 'ab', 'ba', 'bb']
 
-    f_finite(regexEnumerator, possibilities)
+    benchmark(f_finite, regexEnumerator, possibilities)
 
 
-def test_nested_non_capturing_groups():
+def test_nested_non_capturing_groups(benchmark):
     regexEnumerator = RegexEnumerator(r'(?:a(?:b(?:c)))?')
     possibilities = ['', 'abc']
 
-    f_finite(regexEnumerator, possibilities)
+    benchmark(f_finite, regexEnumerator, possibilities)
 
 
-def test_group_for_quantifier_scope():
+def test_group_for_quantifier_scope(benchmark):
     regexEnumerator = RegexEnumerator(r'(ab)+')
     possibilities = ['ab', 'abab', 'ababab']
 
-    f_infinite(regexEnumerator, possibilities)
+    benchmark(f_infinite, regexEnumerator, possibilities)
 
 
-def test_group_with_char_class_infinite_repetition():
+def test_group_with_char_class_infinite_repetition(benchmark):
     regexEnumerator = RegexEnumerator(r'([ab])+')
     possibilities = ['a', 'b', 'aa', 'ab', 'ba', 'bb']
 
-    f_infinite(regexEnumerator, possibilities)
+    benchmark(f_infinite, regexEnumerator, possibilities)
 
 
-def test_group_with_multiple_elements_with_qunatifiers():
+def test_group_with_multiple_elements_with_qunatifiers(benchmark):
     regexEnumerator = RegexEnumerator(r'(a[b-d]{0,2}){0, 3}')
     possibilities = ['']
     char_class = ['', 'b', 'c', 'd', 'bb', 'bc',
@@ -118,11 +118,12 @@ def test_group_with_multiple_elements_with_qunatifiers():
     possibilities.extend(one)
     possibilities.extend(two)
     possibilities.extend(three)
+    possibilities = set(possibilities)
 
-    f_finite(regexEnumerator, set(possibilities))
+    benchmark(f_finite, regexEnumerator, possibilities)
 
 
-def test_nested_groups_with_multiple_elements_with_quantifiers():
+def test_nested_groups_with_multiple_elements_with_quantifiers(benchmark):
     regexEnumerator = RegexEnumerator(r'(a([e-g]){1, 3}){0, 3}')
     possibilities = ['']
     group = ['e', 'f', 'g', 'ee', 'ef', 'eg', 'fe', 'ff', 'fg', 'ge', 'gf', 'gg', 'eee', 'eef', 'eeg', 'efe', 'eff', 'efg', 'ege', 'egf', 'egg',
@@ -133,5 +134,6 @@ def test_nested_groups_with_multiple_elements_with_quantifiers():
     possibilities.extend(one)
     possibilities.extend(two)
     possibilities.extend(three)
+    possibilities = set(possibilities)
 
-    f_finite(regexEnumerator, set(possibilities))
+    benchmark(f_finite, regexEnumerator, possibilities)
