@@ -11,7 +11,7 @@ setup(
     author='Vincenzo Greco',
     author_email='grecovincenzo98@gmail.com',
     extras_require={
-        'dev': ['pytest', 'pytest-cov', 'pytest-benchmark'],
+        'dev': ['pytest', 'pytest-cov'],
     },
     url='https://github.com/Buba98/regex_enumerator',
     keywords=['regex', 'regex enumerator', 'regular-expression', 'enumerator', 'string-generation',

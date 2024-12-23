@@ -29,7 +29,7 @@ def test_done():
     f_finite(regexEnumerator, possibilities)
 
 
-def test_weak_password(benchmark):
+def test_weak_password():
     regexEnumerator = RegexEnumerator(
         r'[Ll][Oo0][Vv][Ee3]([Yy][Oo0][Uu])?(2023|2024)[!1.]{1,2}')
     possibilities = []
@@ -52,4 +52,4 @@ def test_weak_password(benchmark):
                                     possibilities.append(
                                         l_char + o + v + e + y + year + special_1 + special_2)
 
-    benchmark(f_finite, regexEnumerator, possibilities)
+    f_finite(regexEnumerator, possibilities)
