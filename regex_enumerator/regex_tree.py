@@ -17,10 +17,7 @@ class CharClasses:
         if self.done:
             self.current: list[str] = ['']
             return
-
-        self.current = [self._calculate()]
-        if self._min_len == 0:
-            self.current.append('')
+        self.current = self._calculate()
 
     def _calculate_max_index(self) -> int | None:
         if self._max_len is None or self.done:
@@ -29,26 +26,42 @@ class CharClasses:
             return self._max_len - self._min_len
         return ((self._base ** max(self._min_len, 1) - self._base ** (self._max_len + 1)) // (1 - self._base)) - 1
 
-    def _calculate(self) -> str:
-        if self._max_len is not None and self._index >= self._max_index:
+    def _calculate(self) -> list[str]:
+        if self._max_len is not None and 0 >= self._max_index:
             self.done = True
 
         if self._base == 1:
-            return self._chars[0] * (self._min_len + self._index)
+            return [self._chars * self._min_len]
 
         result = []
-        num = self._start + self._index
+        num = self._start
         while num > 1:
             result.append(self._chars[num % self._base])
             num //= self._base
 
-        return ''.join(result)
+        new_value = ''.join(result)
+        if self._min_len == 0:
+            return ['', new_value]
 
-    def next(self) -> set[str]:
+        return [new_value]
+
+    def next(self) -> list[str]:
         assert not self.done
 
         self._index += 1
-        new_value = self._calculate()
+        if self._max_len is not None and self._index >= self._max_index:
+            self.done = True
+
+        if self._base == 1:
+            new_value = self._chars * (self._min_len + self._index)
+        else:
+            result = []
+            num = self._start + self._index
+            while num > 1:
+                result.append(self._chars[num % self._base])
+                num //= self._base
+
+            new_value = ''.join(result)
         assert new_value not in self.current
         self.current.append(new_value)
         return [new_value]
