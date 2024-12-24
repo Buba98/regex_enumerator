@@ -15,7 +15,7 @@ setup(
     },
     url='https://github.com/Buba98/regex_enumerator',
     keywords=['regex', 'regex enumerator', 'regular-expression', 'enumerator', 'string-generation',
-              'exhaustive-matching', 'regex-testing', 'regex-tools', 'string-enumeration', 'data-generation'],
+              'exhaustive-matching', 'exhaustive-search', 'regex-testing', 'regex-tools', 'string-enumeration', 'data-generation'],
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires='>=3.10',

@@ -31,7 +31,7 @@ def test_done():
 
 def test_weak_password():
     regexEnumerator = RegexEnumerator(
-        r'[Ll][Oo0][Vv][Ee3]([Yy][Oo0][Uu])?(2023|2024)[!1.]{1,2}')
+        r'[Ll][Oo0][Vv][Ee3]([Yy][Oo0][Uu])?(2023|2024|123)?[!1.]{1,2}')
     possibilities = []
 
     you_or_not = []
@@ -46,7 +46,7 @@ def test_weak_password():
             for v in 'Vv':
                 for e in 'Ee3':
                     for y in you_or_not:
-                        for year in ['2023', '2024']:
+                        for year in ['2023', '2024', '123', '']:
                             for special_1 in ['!', '1', '.']:
                                 for special_2 in ['!', '1', '.', '']:
                                     possibilities.append(

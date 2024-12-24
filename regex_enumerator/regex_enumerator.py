@@ -3,7 +3,7 @@ from .regex_tree import RegexTree
 
 
 class RegexEnumerator:
-    def __init__(self, regex: str, additional_charset: str | list[str] = None) -> None:
+    def __init__(self, regex: str, additional_charset: str | list[str] = None, precompute: bool = True) -> None:
         default_charset = [chr(c) for c in range(32, 127)]
 
         if additional_charset is None:
@@ -14,7 +14,7 @@ class RegexEnumerator:
             additional = list(additional_charset)
 
         charset = ''.join(sorted(set(default_charset + additional)))
-        parser = RegexParser(regex, charset)
+        parser = RegexParser(regex, charset, precompute)
         self.regexTree: RegexTree = parser.parse()
         self.current: list[str] = list(self.regexTree.current)
         self.done: bool = self.regexTree.done and len(self.current) == 0

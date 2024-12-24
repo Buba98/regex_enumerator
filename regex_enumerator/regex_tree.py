@@ -3,8 +3,9 @@ class RegexTree:
 
 
 class CharClasses:
-    def __init__(self, chars_list: list[str], min_len: int, max_len: int):
+    def __init__(self, chars_list: list[str], min_len: int, max_len: int, precompute: bool):
         self._index = 0
+        self._precompute = precompute
         self._chars: str = ''.join(sorted(set(''.join(chars_list))))
         self._min_len = min_len
         self._max_len = max_len
@@ -41,7 +42,7 @@ class CharClasses:
             result.append(self._chars[num % self._base])
             num //= self._base
 
-        return ''.join(reversed(result))
+        return ''.join(result)
 
     def next(self) -> set[str]:
         assert not self.done
@@ -54,7 +55,7 @@ class CharClasses:
 
 
 class BackReference:
-    def __init__(self, reference: RegexTree, min_len: int, max_len: int | None):
+    def __init__(self, reference: RegexTree, min_len: int, max_len: int | None, precompute: bool):
         self._min_len = min_len
         self._max_len = max_len
         self._index = 0
@@ -102,7 +103,7 @@ class BackReference:
 
 
 class Alternative:
-    def __init__(self, elements: list[CharClasses | RegexTree | BackReference]):
+    def __init__(self, elements: list[CharClasses | RegexTree | BackReference], precompute: bool):
         self._index = 0
         self._elements: list[CharClasses | RegexTree | BackReference] = [
             element for element in elements if not element.done or len(element.current) > 0]
@@ -200,7 +201,7 @@ class Alternative:
 
 
 class RegexTree:
-    def __init__(self, alternatives: list[Alternative], min_len: int, max_len: int | None):
+    def __init__(self, alternatives: list[Alternative], min_len: int, max_len: int | None, precompute: bool):
         self.references: list[BackReference] = []
         self._alternatives: list[Alternative] = [
             alternative for alternative in alternatives if not alternative.done or len(alternative.current) > 0]
