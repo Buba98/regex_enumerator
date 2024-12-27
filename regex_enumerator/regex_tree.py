@@ -307,8 +307,7 @@ class RegexTree:
             self._gen_charset = True
 
         if self._gen_charset:
-            _: set[str] = self._next_charset()
-            # Optimization: use the new charset to calculate the next set of strings
+            self._next_charset()
             result: set[str] = self._calculate_using_new_charset()
         else:
             if not self._done_repetition:
@@ -341,7 +340,7 @@ class RegexTree:
 
         return result
 
-    def _next_charset(self) -> set[str]:
+    def _next_charset(self) -> None:
         assert not self._done_charset
 
         index_charset = self._index_charset + 1
@@ -355,9 +354,7 @@ class RegexTree:
         self._index_charset = index_charset
         new_chars = self._alternatives[index_charset].next()
         self._done_charset = all(alt.done for alt in self._alternatives)
-        new_chars -= self._current_chars
         self._current_chars.update(new_chars)
-        return new_chars
 
     def _calculate_chars(self) -> set[str]:
         result = set()
