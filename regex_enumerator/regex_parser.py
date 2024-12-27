@@ -42,7 +42,7 @@ class RegexParser:
                     if self.index < len(self.regex) and self.regex[self.index] == '?':
                         self.index += 1
                         if self.index >= len(self.regex):
-                            self._raise_error("Invalid named group")
+                            self._raise_error("Invalid group")
                         elif self.regex[self.index] == '<':
                             self.index += 1
                             name = ''
@@ -97,11 +97,12 @@ class RegexParser:
                         continue
                     if isinstance(reference, str):
                         if reference not in named_groups:
-                            self._raise_error("Invalid back reference")
+                            self._raise_error("Named back reference not found")
                         group = named_groups[reference]
                     else:
                         if reference < 1 or reference > len(ordered_groups):
-                            self._raise_error("Invalid back reference")
+                            self._raise_error(
+                                "Positional back reference not found")
                         group = ordered_groups[reference - 1]
                     min_len, max_len = self._parseQuantifier()
                     reference = BackReference(
@@ -130,13 +131,13 @@ class RegexParser:
                 self.index += 1
                 name = ''
                 if len(self.regex) <= self.index or self.regex[self.index] != '<':
-                    self._raise_error("Invalid back reference")
+                    self._raise_error("Invalid named back reference")
                 self.index += 1
                 while self.index < len(self.regex) and self.regex[self.index] != '>':
                     name += self.regex[self.index]
                     self.index += 1
-                if len(self.regex) <= self.index or self.regex[self.index] != '>':
-                    self._raise_error("Invalid back reference")
+                if len(self.regex) <= self.index or self.regex[self.index] != '>' or name == '':
+                    self._raise_error("Invalid named back reference")
                 self.index += 1
                 return name
             case char if char.isdigit():
@@ -169,7 +170,7 @@ class RegexParser:
             case 'f': return '\f'
             case 'x':
                 if len(self.regex) < self.index + 1 or self.regex[self.index] not in self.HEX:
-                    raise ValueError('Invalid escape character')
+                    self._raise_error('Invalid ASCII escape character')
                 if len(self.regex) < self.index + 2 or self.regex[self.index + 1] not in self.HEX:
                     num = int(self.regex[self.index], 16)
                     self.index += 1
@@ -177,13 +178,13 @@ class RegexParser:
                     num = int(self.regex[self.index: self.index + 2], 16)
                     self.index += 2
                 if num < 32 or num > 126:
-                    self._raise_error(f"Invalid escape character {num}")
+                    self._raise_error(f"Invalid ASCII escape character {num}")
                 return chr(num)
             case 'u':
                 code = []
                 for _ in range(4):
                     if len(self.regex) <= self.index or self.regex[self.index] not in self.HEX:
-                        self._raise_error("Invalid escape character")
+                        self._raise_error("Invalid unicode escape character")
                     code.append(self.regex[self.index])
                     self.index += 1
                 num = int(''.join(code), 16)

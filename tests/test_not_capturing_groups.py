@@ -1,5 +1,4 @@
-from regex_enumerator import RegexEnumerator
-from .test_function import f_finite, f_infinite
+from .test_function import f_finite
 
 
 def test_not_capturing_groups():

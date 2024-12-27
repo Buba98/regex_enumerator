@@ -31,6 +31,14 @@ def test_done():
 
     f_finite(regex, possibilities)
 
+def test_empty_additional_charset():
+    regexEnumerator = RegexEnumerator(r'')
+    assert regexEnumerator.next() == ''
+    assert regexEnumerator.next() == None
+    regexEnumerator = RegexEnumerator(r'', precompute=False)
+    assert regexEnumerator.next() == ''
+    assert regexEnumerator.next() == None
+
 
 def test_weak_password():
     regex = r'[Ll][Oo0][Vv][Ee3]([Yy][Oo0][Uu])?(2023|2024|123)?[!1.]{1,2}'

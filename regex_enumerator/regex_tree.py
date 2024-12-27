@@ -255,7 +255,8 @@ class RegexTree:
             self._index_repetition = 0
         self._done_repetition = False
         self._current_chars: set[str] = self._calculate_chars()
-        self.current: set[str] = self._calculate_first() if not self.done else set()
+        self.current: set[str] = self._calculate_first(
+        ) if not self.done else set()
 
     def _calculate_first(self) -> set[str]:
         if self._max_len is not None and self._index_repetition + self._min_len >= self._max_len:
@@ -271,7 +272,8 @@ class RegexTree:
             result = {pfx + sfx for pfx in result for sfx in self._current_chars}
 
         for _ in range(self._index_repetition):
-            result.update({pfx + sfx for pfx in result for sfx in self._current_chars})
+            result.update(
+                {pfx + sfx for pfx in result for sfx in self._current_chars})
 
         return result
 
@@ -327,13 +329,11 @@ class RegexTree:
         return self.current
 
     def _calculate(self) -> set[str]:
+        assert self._index_repetition != 0
         if self._max_len is not None and self._index_repetition + self._min_len >= self._max_len:
             self._done_repetition = True
             if self._done_charset:
                 self.done = True
-
-        if self._index_repetition + self._min_len == 0:
-            return {''}
 
         result = set(self._current_chars)
         for _ in range(1, self._min_len + self._index_repetition):

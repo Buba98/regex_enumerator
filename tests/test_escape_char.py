@@ -1,4 +1,3 @@
-from regex_enumerator import RegexEnumerator
 from .test_function import f_finite
 
 
