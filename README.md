@@ -75,6 +75,16 @@ assert '¢' in result
 assert '£' in result
 ```
 
+## Precomputation
+
+For optimization purposes, the library precomputes the strings of the elements in the regex pattern when those does not repeat indefinitely. To disable this feature, in order to reduce the time of the first call to `next()`, set `precompute=False` when creating the `RegexEnumerator`.
+
+```python
+from regex_enumerator import RegexEnumerator
+
+re = RegexEnumerator(r'a[0-9]b', precompute=False)
+```
+
 ## How it works
 
 This library works by parsing the regex pattern into a tree structure. Once parsed, it performs a breadth-first search (BFS) on the tree to generate all matching strings. This ensures it does not get stuck on unbounded quantifiers for character classes or groups.

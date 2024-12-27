@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='regex_enumerator',
-    version='0.8.5',
+    version='0.9.0',
     packages=find_packages(include=['regex_enumerator', 'regex_enumerator.*']),
     description='Enumerate all strings that match a given regex',
     author='Vincenzo Greco',

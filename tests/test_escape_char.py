@@ -3,140 +3,140 @@ from .test_function import f_finite
 
 
 def test_digit_escape():
-    regexEnumerator = RegexEnumerator(r'\d')
+    regex = r'\d'
     possibilities = [str(i) for i in range(10)]
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_digit_escape_with_quantifier():
-    regexEnumerator = RegexEnumerator(r'\d{1 , 2 }')
+    regex = r'\d{1 , 2 }'
     possibilities = [str(i) for i in range(10)] + [str(i) + str(j)
                                                    for i in range(10) for j in range(10)]
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_non_digit_escape():
-    regexEnumerator = RegexEnumerator(r'\D')
+    regex = r'\D'
     possibilities = [chr(i)
                      for i in range(32, 127) if chr(i) not in '0123456789']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_word_escape():
-    regexEnumerator = RegexEnumerator(r'\w')
+    regex = r'\w'
     possibilities = [chr(i) for i in range(
         32, 127) if chr(i).isalnum() or chr(i) == '_']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_non_word_escape():
-    regexEnumerator = RegexEnumerator(r'\W')
+    regex = r'\W'
     possibilities = [chr(i) for i in range(
         32, 127) if not (chr(i).isalnum() or chr(i) == '_')]
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_whitespace_escape():
-    regexEnumerator = RegexEnumerator(r'\s')
+    regex = r'\s'
     possibilities = [' ', '\t', '\n', '\r', '\f', '\v']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_non_whitespace_escape():
-    regexEnumerator = RegexEnumerator(r'\S')
+    regex = r'\S'
     possibilities = [chr(i) for i in range(
         32, 127) if chr(i) not in ' \t\n\r\f\v']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_tab_escape():
-    regexEnumerator = RegexEnumerator(r'\t')
+    regex = r'\t'
     possibilities = ['\t']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_carriage_return_escape():
-    regexEnumerator = RegexEnumerator(r'\r')
+    regex = r'\r'
     possibilities = ['\r']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_newline_escape():
-    regexEnumerator = RegexEnumerator(r'\n')
+    regex = r'\n'
     possibilities = ['\n']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_vertical_tab_escape():
-    regexEnumerator = RegexEnumerator(r'\v')
+    regex = r'\v'
     possibilities = ['\v']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_form_feed_escape():
-    regexEnumerator = RegexEnumerator(r'\f')
+    regex = r'\f'
     possibilities = ['\f']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_hex_escape():
-    regexEnumerator = RegexEnumerator(r'\x41')
+    regex = r'\x41'
     possibilities = ['A']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_escaped_open_square_bracket():
-    regexEnumerator = RegexEnumerator(r'\[')
+    regex = r'\['
     possibilities = ['[']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_escaped_open_close_square_brackets():
-    regexEnumerator = RegexEnumerator(r'\[\]')
+    regex = r'\[\]'
     possibilities = ['[]']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_escaped_characters_inside_character_class():
-    regexEnumerator = RegexEnumerator(r'[\[\]]')
+    regex = r'[\[\]]'
     possibilities = ['[', ']']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_escaped_char_interrups_range_after_divider():
-    regexEnumerator = RegexEnumerator(r'[a-\d]')
+    regex = r'[a-\d]'
     possibilities = ['a', '-', '0', '1', '2',
                      '3', '4', '5', '6', '7', '8', '9']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_escaped_char_interrups_range_after_1st_char():
 
-    regexEnumerator = RegexEnumerator(r'[\[\d]')
+    regex = r'[\[\d]'
     possibilities = ['[', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_escaped_unicode_literal():
-    regexEnumerator = RegexEnumerator(r'\u00E0')
+    regex = r'\u00E0'
     possibilities = ['à']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)

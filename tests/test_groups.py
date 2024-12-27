@@ -3,112 +3,112 @@ from .test_function import f_finite, f_infinite
 
 
 def test_single_capturing_group_with_literal():
-    regexEnumerator = RegexEnumerator(r'(a)')
+    regex = r'(a)'
     possibilities = ['a']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_single_capturing_group_with_class_single_char():
-    regexEnumerator = RegexEnumerator(r'([a])')
+    regex = r'([a])'
     possibilities = ['a']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_single_capturing_group_with_class_multi_char():
-    regexEnumerator = RegexEnumerator(r'([a-c])')
+    regex = r'([a-c])'
     possibilities = ['a', 'b', 'c']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_capturing_group_with_star_quantifier():
-    regexEnumerator = RegexEnumerator(r'(a)*')
+    regex = r'(a)*'
     possibilities = ['', 'a', 'aa', 'aaa', 'aaaa', 'aaaaa']
 
-    f_infinite(regexEnumerator, possibilities)
+    f_infinite(regex, possibilities)
 
 
 def test_named_capturing_group_with_optional_subgroup():
-    regexEnumerator = RegexEnumerator(r'(?<name>a[bcd](e)?)')
+    regex = r'(?<name>a[bcd](e)?)'
     possibilities = ['ab', 'abe', 'ac', 'ace', 'ad', 'ade']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_literal_followed_by_group_with_star_quantifier():
-    regexEnumerator = RegexEnumerator(r'a(b)*')
+    regex = r'a(b)*'
     possibilities = ['a' + 'b' * i for i in range(6)]
 
-    f_infinite(regexEnumerator, possibilities)
+    f_infinite(regex, possibilities)
 
 
 def test_two_capturing_groups_with_star_quantifiers():
-    regexEnumerator = RegexEnumerator(r'(a)*(b)*')
+    regex = r'(a)*(b)*'
     possibilities = ['a' * i + 'b' * j for i in range(6) for j in range(6)]
 
-    f_infinite(regexEnumerator, possibilities)
+    f_infinite(regex, possibilities)
 
 
 def test_nested_capturing_groups():
-    regexEnumerator = RegexEnumerator(r'(a(b(c)))')
+    regex = r'(a(b(c)))'
     possibilities = ['abc']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_capturing_groups_in_sequence():
-    regexEnumerator = RegexEnumerator(r'((a)(b))')
+    regex = r'((a)(b))'
     possibilities = ['ab']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_non_capturing_group():
-    regexEnumerator = RegexEnumerator(r'(?:a|b)*')
+    regex = r'(?:a|b)*'
     possibilities = ['', 'a', 'b', 'aa', 'ab', 'ba', 'bb']
 
-    f_infinite(regexEnumerator, possibilities)
+    f_infinite(regex, possibilities)
 
 
 def test_non_capturing_group_with_quantifier():
-    regexEnumerator = RegexEnumerator(r'(?:ab)+')
+    regex = r'(?:ab)+'
     possibilities = ['ab', 'abab', 'ababab']
 
-    f_infinite(regexEnumerator, possibilities)
+    f_infinite(regex, possibilities)
 
 
 def test_named_capturing_group_with_quantifier():
-    regexEnumerator = RegexEnumerator(r'(?<chars>[ab]{1,2})')
+    regex = r'(?<chars>[ab]{1,2})'
     possibilities = ['a', 'b', 'aa', 'ab', 'ba', 'bb']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_nested_non_capturing_groups():
-    regexEnumerator = RegexEnumerator(r'(?:a(?:b(?:c)))?')
+    regex = r'(?:a(?:b(?:c)))?'
     possibilities = ['', 'abc']
 
-    f_finite(regexEnumerator, possibilities)
+    f_finite(regex, possibilities)
 
 
 def test_group_for_quantifier_scope():
-    regexEnumerator = RegexEnumerator(r'(ab)+')
+    regex = r'(ab)+'
     possibilities = ['ab', 'abab', 'ababab']
 
-    f_infinite(regexEnumerator, possibilities)
+    f_infinite(regex, possibilities)
 
 
 def test_group_with_char_class_infinite_repetition():
-    regexEnumerator = RegexEnumerator(r'([ab])+')
+    regex = r'([ab])+'
     possibilities = ['a', 'b', 'aa', 'ab', 'ba', 'bb']
 
-    f_infinite(regexEnumerator, possibilities)
+    f_infinite(regex, possibilities)
 
 
 def test_group_with_multiple_elements_with_qunatifiers():
-    regexEnumerator = RegexEnumerator(r'(a[b-d]{0,2}){0, 3}')
+    regex = r'(a[b-d]{0,2}){0, 3}'
     possibilities = ['']
     char_class = ['', 'b', 'c', 'd', 'bb', 'bc',
                   'bd', 'cb', 'cc', 'cd', 'db', 'dc', 'dd']
@@ -119,11 +119,11 @@ def test_group_with_multiple_elements_with_qunatifiers():
     possibilities.extend(two)
     possibilities.extend(three)
 
-    f_finite(regexEnumerator, set(possibilities))
+    f_finite(regex, set(possibilities))
 
 
 def test_nested_groups_with_multiple_elements_with_quantifiers():
-    regexEnumerator = RegexEnumerator(r'(a([e-g]){1, 3}){0, 3}')
+    regex = r'(a([e-g]){1, 3}){0, 3}'
     possibilities = ['']
     group = ['e', 'f', 'g', 'ee', 'ef', 'eg', 'fe', 'ff', 'fg', 'ge', 'gf', 'gg', 'eee', 'eef', 'eeg', 'efe', 'eff', 'efg', 'ege', 'egf', 'egg',
              'fee', 'fef', 'feg', 'ffe', 'fff', 'ffg', 'fge', 'fgf', 'fgg', 'gee', 'gef', 'geg', 'gfe', 'gff', 'gfg', 'gge', 'ggf', 'ggg']
@@ -134,4 +134,4 @@ def test_nested_groups_with_multiple_elements_with_quantifiers():
     possibilities.extend(two)
     possibilities.extend(three)
 
-    f_finite(regexEnumerator, set(possibilities))
+    f_finite(regex, set(possibilities))
