@@ -249,10 +249,31 @@ class RegexTree:
         self.done = self._base == 0 or self._max_len == 0
         self._gen_charset = False
         self._index_charset = 0
-        self._index_repetition = 0
+        if precompute and max_len is not None:
+            self._index_repetition = max_len - min_len
+        else:
+            self._index_repetition = 0
         self._done_repetition = False
         self._current_chars: set[str] = self._calculate_chars()
-        self.current: set[str] = self._calculate() if not self.done else set()
+        self.current: set[str] = self._calculate_first() if not self.done else set()
+
+    def _calculate_first(self) -> set[str]:
+        if self._max_len is not None and self._index_repetition + self._min_len >= self._max_len:
+            self._done_repetition = True
+            if self._done_charset:
+                self.done = True
+
+        if self._index_repetition + self._min_len == 0:
+            return {''}
+
+        result = {''}
+        for _ in range(self._min_len):
+            result = {pfx + sfx for pfx in result for sfx in self._current_chars}
+
+        for _ in range(self._index_repetition):
+            result.update({pfx + sfx for pfx in result for sfx in self._current_chars})
+
+        return result
 
     def add_reference(self, reference: BackReference):
         if reference.done and len(reference.current) == 0:
