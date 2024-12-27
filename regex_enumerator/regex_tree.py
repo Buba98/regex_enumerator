@@ -99,19 +99,14 @@ class BackReference:
         self.current: dict[str, list[str]
                            ] = self._calculate() if not self.done else {}
 
-    def update(self):
+    def update_reference(self, new_strings: set[str]) -> None:
         if self._max_len is not None and self._min_len + self._index >= self._max_len and self.reference.done:
             self.done = True
 
-        for string in self.reference.current:
-            if string in self.current:
-                self.current[string].append(
-                    string * (self._min_len + self._index))
-            else:
-                result = []
-                for i in range(self._min_len, self._min_len + self._index + 1):
-                    result.append(string * i)
-                self.current[string] = result
+        for string in new_strings:
+            assert string not in self.current
+            self.current[string] = [
+                string * i for i in range(self._min_len, self._min_len + self._index + 1)]
 
     def _calculate(self) -> dict[str, set[str]]:
         current_ref = self.reference.current
@@ -121,10 +116,8 @@ class BackReference:
         result: dict[str, list[str]] = {}
 
         for string in current_ref:
-            partial = []
-            for i in range(self._min_len, self._min_len + self._index + 1):
-                partial.append(string * i)
-            result[string] = partial
+            result[string] = [
+                string * i for i in range(self._min_len, self._min_len + self._index + 1)]
 
         return result
 
@@ -324,8 +317,8 @@ class RegexTree:
             return result
 
         for reference in self.references:
-            reference.update()
-        return self.current
+            reference.update_reference(result)
+        return result
 
     def _calculate(self) -> set[str]:
         assert self._index_repetition != 0

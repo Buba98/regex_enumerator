@@ -80,3 +80,19 @@ def test_named_group_infinite_repetition_with_backreference():
     ]
 
     f_infinite(regex, possibilities)
+
+
+def test_backreference_with_group_quantifier_and_mismatch():
+    regex = r'(a){1,3}\1{0,2}'
+    possibilities = ['a', 'aa', 'aaa', 'aaaa', 'aaaaaa', 'aaaaaaaaa']
+
+    f_finite(regex, possibilities)
+
+
+def test_backreference_with_group_quantifier_and_mismatch_complex():
+    regex = r'(a){1,3}[c-d]\1{0,2}'
+    possibilities = ['ac', 'ad', 'aca', 'ada', 'acaa', 'adaa',
+                     'aac', 'aad', 'aacaa', 'aadaa', 'aacaaaa', 'aadaaaa',
+                     'aaac', 'aaad', 'aaacaaa', 'aaadaaa', 'aaacaaaaaa', 'aaadaaaaaa']
+
+    f_finite(regex, possibilities)
