@@ -2,7 +2,7 @@ class RegexTree:
     pass
 
 
-class CharClasses:
+class CharClass:
     def __init__(self, chars_list: list[str], min_len: int, max_len: int, precompute: bool):
         self._index = 0
         self._precompute = precompute and max_len is not None
@@ -89,7 +89,10 @@ class BackReference:
     def __init__(self, reference: RegexTree, min_len: int, max_len: int | None, precompute: bool):
         self._min_len = min_len
         self._max_len = max_len
-        self._index = 0
+        if precompute and max_len is not None:
+            self._index = max_len - min_len
+        else:
+            self._index = 0
         self.reference: RegexTree = reference
         self.done = max_len == 0 or (
             reference.done and len(reference.current) == 0)
@@ -105,9 +108,10 @@ class BackReference:
                 self.current[string].append(
                     string * (self._min_len + self._index))
             else:
-                self.current[string] = []
+                result = []
                 for i in range(self._min_len, self._min_len + self._index + 1):
-                    self.current[string].append(string * i)
+                    result.append(string * i)
+                self.current[string] = result
 
     def _calculate(self) -> dict[str, set[str]]:
         current_ref = self.reference.current
@@ -117,7 +121,10 @@ class BackReference:
         result: dict[str, list[str]] = {}
 
         for string in current_ref:
-            result[string] = [string * (self._min_len + self._index)]
+            partial = []
+            for i in range(self._min_len, self._min_len + self._index + 1):
+                partial.append(string * i)
+            result[string] = partial
 
         return result
 
@@ -134,9 +141,9 @@ class BackReference:
 
 
 class Alternative:
-    def __init__(self, elements: list[CharClasses | RegexTree | BackReference], precompute: bool):
+    def __init__(self, elements: list[CharClass | RegexTree | BackReference]):
         self._index = 0
-        self._elements: list[CharClasses | RegexTree | BackReference] = [
+        self._elements: list[CharClass | RegexTree | BackReference] = [
             element for element in elements if not element.done or len(element.current) > 0]
         self._base = len(self._elements)
         self.done = self._base == 0
@@ -157,7 +164,7 @@ class Alternative:
         self._index = index
         result: list[tuple[str, dict[RegexTree, str]]] = []
 
-        if isinstance(self._elements[0], CharClasses):
+        if isinstance(self._elements[0], CharClass):
             for string in self._elements[0].next() if index == 0 else self._elements[0].current:
                 result.append((string, {}))
         else:
@@ -168,7 +175,7 @@ class Alternative:
 
         for i, element in enumerate(self._elements[1:], start=1):
             temp = []
-            if isinstance(element, CharClasses):
+            if isinstance(element, CharClass):
                 for sfx in element.next() if i == index else element.current:
                     for pfx in result:
                         temp.append((pfx[0] + sfx, pfx[1]))
@@ -198,7 +205,7 @@ class Alternative:
 
         result: list[tuple[str, dict[RegexTree, str]]] = []
 
-        if isinstance(self._elements[0], CharClasses):
+        if isinstance(self._elements[0], CharClass):
             for char in self._elements[0].current:
                 result.append((char, {}))
         else:
@@ -210,7 +217,7 @@ class Alternative:
         for element in self._elements[1:]:
             temp: list[tuple[str, dict[RegexTree, str]]] = []
             done = done and element.done
-            if isinstance(element, CharClasses):
+            if isinstance(element, CharClass):
                 for pfx in result:
                     for sfx in element.current:
                         temp.append((pfx[0] + sfx, pfx[1]))

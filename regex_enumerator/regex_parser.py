@@ -1,4 +1,4 @@
-from .regex_tree import Alternative, BackReference, CharClasses, RegexTree
+from .regex_tree import Alternative, BackReference, CharClass, RegexTree
 
 
 class RegexError(Exception):
@@ -29,7 +29,7 @@ class RegexParser:
 
     def _parseRegex(self, to_close: bool) -> RegexTree:
         alternatives: list[Alternative] = []
-        elements: list[CharClasses | RegexTree | BackReference] = []
+        elements: list[CharClass | RegexTree | BackReference] = []
         named_groups: dict[str, RegexTree] = {}
         ordered_groups: list[RegexTree] = []
         min_len_group, max_len_group = 1, 1
@@ -73,24 +73,27 @@ class RegexParser:
                     to_close = False
                     break
                 case '|':
-                    alternatives.append(Alternative(elements, self.precompute))
+                    alternatives.append(Alternative(elements))
                     elements = []
                     named_groups = {}
                     ordered_groups = []
                 case '[':
                     chars = self._parseCharClass()
                     min_len, max_len = self._parseQuantifier()
-                    elements.append(CharClasses(chars, min_len, max_len, self.precompute))
+                    elements.append(
+                        CharClass(chars, min_len, max_len, self.precompute))
                 case '.':
                     chars = list(self.charset)
                     min_len, max_len = self._parseQuantifier()
-                    elements.append(CharClasses(chars, min_len, max_len, self.precompute))
+                    elements.append(
+                        CharClass(chars, min_len, max_len, self.precompute))
                 case '\\':
                     reference = self._parseBackReferenceLookahead()
                     if reference is None:
                         chars = self._parseEscapeChar()
                         min_len, max_len = self._parseQuantifier()
-                        elements.append(CharClasses(chars, min_len, max_len, self.precompute))
+                        elements.append(
+                            CharClass(chars, min_len, max_len, self.precompute))
                         continue
                     if isinstance(reference, str):
                         if reference not in named_groups:
@@ -101,17 +104,19 @@ class RegexParser:
                             self._raise_error("Invalid back reference")
                         group = ordered_groups[reference - 1]
                     min_len, max_len = self._parseQuantifier()
-                    reference = BackReference(group, min_len, max_len, self.precompute)
+                    reference = BackReference(
+                        group, min_len, max_len, self.precompute)
                     group.add_reference(reference)
                     elements.append(reference)
                 case _:
                     min_len, max_len = self._parseQuantifier()
-                    elements.append(CharClasses([char], min_len, max_len, self.precompute))
+                    elements.append(
+                        CharClass([char], min_len, max_len, self.precompute))
 
         if to_close:
             self._raise_error("Unmatched opening parenthesis")
 
-        alternatives.append(Alternative(elements, self.precompute))
+        alternatives.append(Alternative(elements))
         return RegexTree(alternatives, min_len_group, max_len_group, self.precompute)
 
     def _parseBackReferenceLookahead(self) -> str | int | None:
