@@ -31,6 +31,7 @@ def test_done():
 
     f_finite(regex, possibilities)
 
+
 def test_empty_additional_charset():
     regexEnumerator = RegexEnumerator(r'')
     assert regexEnumerator.next() == ''
@@ -61,5 +62,18 @@ def test_weak_password():
                                 for special_2 in ['!', '1', '.', '']:
                                     possibilities.append(
                                         l_char + o + v + e + y + year + special_1 + special_2)
+
+    f_finite(regex, possibilities)
+
+
+def test_complete_regex():
+    regex = r'[Ll]([Uu])?\1{0,2}(0|1){0,3}[!1.]'
+    possibilities = []
+
+    for l_char in 'Ll':
+        for u in ['U', 'UU', 'UUU', 'u', 'uu', 'uuu', '']:
+            for num in ['0', '1', '00', '01', '10', '11', '000', '001', '010', '011', '100', '101', '110', '111', '']:
+                for special in ['!', '1', '.']:
+                    possibilities.append(l_char + u + num + special)
 
     f_finite(regex, possibilities)

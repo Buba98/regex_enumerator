@@ -3,7 +3,7 @@ class RegexTree:
 
 
 class CharClass:
-    def __init__(self, chars_list: list[str], min_len: int, max_len: int, precompute: bool):
+    def __init__(self, chars_list: list[str], min_len: int, max_len: int | None, precompute: bool):
         self._index = 0
         self._precompute = precompute and max_len is not None
         self._chars: str = ''.join(sorted(set(''.join(chars_list))))
@@ -33,7 +33,7 @@ class CharClass:
         result = []
         for i in range(self._min_len, self._max_len + 1):
             temp = ['']
-            for j in range(i):
+            for _ in range(i):
                 temp = [pfx + sfx for pfx in self._chars for sfx in temp]
             result.extend(temp)
         return result
@@ -96,8 +96,7 @@ class BackReference:
         self.reference: RegexTree = reference
         self.done = max_len == 0 or (
             reference.done and len(reference.current) == 0)
-        self.current: dict[str, list[str]
-                           ] = self._calculate() if not self.done else {}
+        self.current: dict[str, list[str]] = self._calculate() if not self.done else {}
 
     def update_reference(self, new_strings: set[str]) -> None:
         if self._max_len is not None and self._min_len + self._index >= self._max_len and self.reference.done:
@@ -108,7 +107,7 @@ class BackReference:
             self.current[string] = [
                 string * i for i in range(self._min_len, self._min_len + self._index + 1)]
 
-    def _calculate(self) -> dict[str, set[str]]:
+    def _calculate(self) -> dict[str, list[str]]:
         current_ref = self.reference.current
         if self._max_len is not None and self._min_len + self._index >= self._max_len:
             self.done = True
@@ -121,7 +120,7 @@ class BackReference:
 
         return result
 
-    def next(self) -> dict[str, set[str]]:
+    def next(self) -> dict[str, list[str]]:
         assert not self.done
         self._index += 1
         if self._max_len is not None and self._min_len + self._index >= self._max_len:
@@ -270,7 +269,7 @@ class RegexTree:
 
         return result
 
-    def add_reference(self, reference: BackReference):
+    def add_reference(self, reference: BackReference) -> None:
         if reference.done and len(reference.current) == 0:
             return
         self.references.append(reference)

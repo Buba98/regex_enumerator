@@ -93,7 +93,7 @@ class RegexParser:
                         chars = self._parseEscapeChar()
                         min_len, max_len = self._parseQuantifier()
                         elements.append(
-                            CharClass(chars, min_len, max_len, self.precompute))
+                            CharClass([chars], min_len, max_len, self.precompute))
                         continue
                     if isinstance(reference, str):
                         if reference not in named_groups:
@@ -257,7 +257,7 @@ class RegexParser:
 
         return chars_list
 
-    def _parseQuantifier(self) -> tuple[int, int]:
+    def _parseQuantifier(self) -> tuple[int, int | None]:
 
         if len(self.regex) <= self.index:
             return 1, 1
