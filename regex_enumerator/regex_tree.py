@@ -25,10 +25,6 @@ class CharClass:
         if self._max_len is not None and self._max_len == self._min_len:
             self.done = True
 
-        if self._min_len == 0:
-            self._last = ['']
-            return ['']
-
         result = ['']
         for _ in range(self._min_len):
             result = [pfx + sfx for pfx in self._chars for sfx in result]
@@ -98,11 +94,16 @@ class Alternative:
     def __init__(self, elements: list[CharClass | RegexTree | BackReference]):
         self._index = 0
         self._elements = [e for e in elements if not e.done or len(e.current)]
+        self._noBackreference = not any(isinstance(
+            e, BackReference) for e in self._elements)
         self._base = len(self._elements)
         self.done = self._base == 0
         self.current = self._first()
 
     def next(self) -> set[str]:
+        if self._noBackreference:
+            return self._next_no_backreference()
+
         assert not self.done
         assert not isinstance(self._elements[0], BackReference)
 
@@ -153,9 +154,51 @@ class Alternative:
         self.current.update(new_strings)
         return new_strings
 
+    def _first_no_backreference(self) -> set[str]:
+        result: set[str] = {''}
+        done = True
+
+        for element in self._elements:
+            done = done and element.done
+            result = {pfx + sfx for pfx in result for sfx in element.current}
+
+        self.done = done
+        return result
+
+    def _next_no_backreference(self) -> set[str]:
+        assert not self.done
+
+        index = self._index + 1
+        if index >= self._base:
+            index = 0
+        while self._elements[index].done:
+            index += 1
+            if index >= self._base:
+                index = 0
+
+        self._index = index
+        result: set[str] = {''}
+        done = True
+
+        for i, element in enumerate(self._elements):
+            if i == index:
+                strings = element.next()
+            else:
+                strings = element.current
+            done = done and element.done
+            result = {pfx + sfx for pfx in result for sfx in strings}
+
+        self.done = done
+        result -= self.current
+        self.current.update(result)
+        return result
+
     def _first(self) -> set[str]:
         if self.done:
             return {''}
+
+        if self._noBackreference:
+            return self._first_no_backreference()
 
         assert not isinstance(self._elements[0], BackReference)
 
