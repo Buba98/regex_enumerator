@@ -134,3 +134,10 @@ def test_nested_groups_with_multiple_elements_with_quantifiers():
     possibilities.extend(three)
 
     f_finite(regex, set(possibilities))
+
+
+def test_group_with_alternative_empty():
+    regex = r'(a|[]){3}'
+    possibilities = ['', 'a', 'aa', 'aaa']
+
+    f_finite(regex, possibilities)

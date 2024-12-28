@@ -18,10 +18,9 @@ class RegexParser:
     DIGITS = '0123456789'
     SPACES = ' \t\n\r\f\v'
 
-    def __init__(self, regex: str, charset: str, precompute: bool):
+    def __init__(self, regex: str, charset: str) -> None:
         self.regex = regex
         self.charset = charset
-        self.precompute = precompute
 
     def parse(self) -> RegexTree:
         self.index = 0
@@ -81,19 +80,19 @@ class RegexParser:
                     chars = self._parseCharClass()
                     min_len, max_len = self._parseQuantifier()
                     elements.append(
-                        CharClass(chars, min_len, max_len, self.precompute))
+                        CharClass(chars, min_len, max_len))
                 case '.':
                     chars = list(self.charset)
                     min_len, max_len = self._parseQuantifier()
                     elements.append(
-                        CharClass(chars, min_len, max_len, self.precompute))
+                        CharClass(chars, min_len, max_len))
                 case '\\':
                     reference = self._parseBackReferenceLookahead()
                     if reference is None:
                         chars = self._parseEscapeChar()
                         min_len, max_len = self._parseQuantifier()
                         elements.append(
-                            CharClass([chars], min_len, max_len, self.precompute))
+                            CharClass([chars], min_len, max_len))
                         continue
                     if isinstance(reference, str):
                         if reference not in named_groups:
@@ -105,20 +104,19 @@ class RegexParser:
                                 "Positional back reference not found")
                         group = ordered_groups[reference - 1]
                     min_len, max_len = self._parseQuantifier()
-                    reference = BackReference(
-                        group, min_len, max_len, self.precompute)
+                    reference = BackReference(group, min_len, max_len)
                     group.add_reference(reference)
                     elements.append(reference)
                 case _:
                     min_len, max_len = self._parseQuantifier()
                     elements.append(
-                        CharClass([char], min_len, max_len, self.precompute))
+                        CharClass([char], min_len, max_len))
 
         if to_close:
             self._raise_error("Unmatched opening parenthesis")
 
         alternatives.append(Alternative(elements))
-        return RegexTree(alternatives, min_len_group, max_len_group, self.precompute)
+        return RegexTree(alternatives, min_len_group, max_len_group)
 
     def _parseBackReferenceLookahead(self) -> str | int | None:
         if len(self.regex) <= self.index:

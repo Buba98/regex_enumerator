@@ -36,9 +36,6 @@ def test_empty_additional_charset():
     regexEnumerator = RegexEnumerator(r'')
     assert regexEnumerator.next() == ''
     assert regexEnumerator.next() == None
-    regexEnumerator = RegexEnumerator(r'', precompute=False)
-    assert regexEnumerator.next() == ''
-    assert regexEnumerator.next() == None
 
 
 def test_weak_password():

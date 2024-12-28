@@ -43,6 +43,11 @@ def test_range_character_class_with_zero_repetition():
 
     f_finite(regex, possibilities)
 
+def test_empty_character_class():
+    regex = r'[]'
+    possibilities = ['']
+
+    f_finite(regex, possibilities)
 
 def test_range_character_class_with_one_or_more_quantifier():
     regex = r'[a-b]+'
