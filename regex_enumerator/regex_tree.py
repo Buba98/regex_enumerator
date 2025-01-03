@@ -3,12 +3,12 @@ class RegexTree:
 
 
 class CharClass:
-    def __init__(self, chars_list: list[str], min_len: int, max_len: int | None):
+    def __init__(self, charset: str, min_len: int, max_len: int | None):
         self._index = 0
-        self._chars: str = ''.join(sorted(set(''.join(chars_list))))
+        self._charset = charset
         self._min_len = min_len
         self._max_len = max_len
-        self._base = len(self._chars)
+        self._base = len(charset)
         self.done = self._base == 0 or self._max_len == 0
         self.current: list[str] = self._first()
 
@@ -18,7 +18,7 @@ class CharClass:
 
         if self._base == 1 and self._max_len is not None:
             self.done = True
-            result = [self._chars *
+            result = [self._charset *
                       i for i in range(self._min_len, self._max_len + 1)]
             return result
 
@@ -27,7 +27,7 @@ class CharClass:
 
         result = ['']
         for _ in range(self._min_len):
-            result = [pfx + sfx for pfx in self._chars for sfx in result]
+            result = [pfx + sfx for pfx in self._charset for sfx in result]
 
         self._last = result
         return result
@@ -39,7 +39,7 @@ class CharClass:
         if self._max_len is not None and self._index + self._min_len == self._max_len:
             self.done = True
 
-        result = [pfx + sfx for pfx in self._last for sfx in self._chars]
+        result = [pfx + sfx for pfx in self._last for sfx in self._charset]
         self.current.extend(result)
         self._last = result
         return result
@@ -118,26 +118,18 @@ class Alternative:
         self._index = index
         result: list[tuple[str, dict[RegexTree, str]]] = []
 
-        if isinstance(self._elements[0], CharClass):
-            for string in self._elements[0].next() if index == 0 else self._elements[0].current:
-                result.append((string, {}))
-        else:
+        if isinstance(self._elements[0], RegexTree) and len(self._elements[0].references):
             for string in self._elements[0].next() if index == 0 else self._elements[0].current:
                 result.append((string, {self._elements[0]: string}))
+        else:
+            for string in self._elements[0].next() if index == 0 else self._elements[0].current:
+                result.append((string, {}))
 
         done = self._elements[0].done
 
         for i, element in enumerate(self._elements[1:], start=1):
             temp = []
-            if isinstance(element, CharClass):
-                for sfx in element.next() if i == index else element.current:
-                    for pfx in result:
-                        temp.append((pfx[0] + sfx, pfx[1]))
-            elif isinstance(element, RegexTree):
-                for sfx in element.next() if i == index else element.current:
-                    for pfx in result:
-                        temp.append((pfx[0] + sfx, {**pfx[1], element: sfx}))
-            else:
+            if isinstance(element, BackReference):
                 if i == index:
                     element.next()
                 for pfx in result:
@@ -146,6 +138,14 @@ class Alternative:
                     for sfx in element.current[reference]:
                         temp.append(
                             (pfx[0] + sfx, pfx[1]))
+            elif isinstance(element, RegexTree) and len(element.references):
+                for sfx in element.next() if i == index else element.current:
+                    for pfx in result:
+                        temp.append((pfx[0] + sfx, {**pfx[1], element: sfx}))
+            else:
+                for sfx in element.next() if i == index else element.current:
+                    for pfx in result:
+                        temp.append((pfx[0] + sfx, pfx[1]))
             result = temp
             done = done and element.done
 
@@ -204,33 +204,34 @@ class Alternative:
 
         result: list[tuple[str, dict[RegexTree, str]]] = []
 
-        if isinstance(self._elements[0], CharClass):
-            for char in self._elements[0].current:
-                result.append((char, {}))
-        else:
+        if isinstance(self._elements[0], RegexTree) and len(self._elements[0].references):
             for char in self._elements[0].current:
                 result.append((char, {self._elements[0]: char}))
+        else:
+            for char in self._elements[0].current:
+                result.append((char, {}))
 
         done = self._elements[0].done
 
         for element in self._elements[1:]:
             temp: list[tuple[str, dict[RegexTree, str]]] = []
             done = done and element.done
-            if isinstance(element, CharClass):
-                for pfx in result:
-                    for sfx in element.current:
-                        temp.append((pfx[0] + sfx, pfx[1]))
-            elif isinstance(element, RegexTree):
-                for pfx in result:
-                    for sfx in element.current:
-                        temp.append((pfx[0] + sfx, {**pfx[1], element: sfx}))
-            else:
+            if isinstance(element, BackReference):
                 for pfx in result:
                     reference = pfx[1][element.reference]
                     assert reference is not None
                     for sfx in element.current[reference]:
                         temp.append(
                             (pfx[0] + sfx, pfx[1]))
+            elif isinstance(element, RegexTree) and len(element.references):
+                for pfx in result:
+                    for sfx in element.current:
+                        temp.append((pfx[0] + sfx, {**pfx[1], element: sfx}))
+            else:
+                for pfx in result:
+                    for sfx in element.current:
+                        temp.append((pfx[0] + sfx, pfx[1]))
+
             result = temp
 
         self.done = done

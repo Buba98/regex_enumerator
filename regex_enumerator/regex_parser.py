@@ -82,17 +82,16 @@ class RegexParser:
                     elements.append(
                         CharClass(chars, min_len, max_len))
                 case '.':
-                    chars = list(self.charset)
                     min_len, max_len = self._parseQuantifier()
                     elements.append(
-                        CharClass(chars, min_len, max_len))
+                        CharClass(self.charset, min_len, max_len))
                 case '\\':
                     reference = self._parseBackReferenceLookahead()
                     if reference is None:
                         chars = self._parseEscapeChar()
                         min_len, max_len = self._parseQuantifier()
                         elements.append(
-                            CharClass([chars], min_len, max_len))
+                            CharClass(chars, min_len, max_len))
                         continue
                     if isinstance(reference, str):
                         if reference not in named_groups:
@@ -110,7 +109,7 @@ class RegexParser:
                 case _:
                     min_len, max_len = self._parseQuantifier()
                     elements.append(
-                        CharClass([char], min_len, max_len))
+                        CharClass(char, min_len, max_len))
 
         if to_close:
             self._raise_error("Unmatched opening parenthesis")
@@ -191,7 +190,7 @@ class RegexParser:
                 self._raise_error("Unicode property not supported")
             case _: return char
 
-    def _parseCharClass(self) -> list[str]:
+    def _parseCharClass(self) -> str:
         chars_list: list[str] = []
         first_char = None
         range_divider = False
@@ -249,11 +248,12 @@ class RegexParser:
         elif first_char is not None:
             chars_list.append(first_char)
 
-        if negated:
-            chars_list = [
-                c for c in self.charset if c not in ''.join(chars_list)]
+        charset = ''.join(sorted(set(''.join(chars_list))))
 
-        return chars_list
+        if negated:
+            return ''.join(c for c in self.charset if c not in charset)
+
+        return charset
 
     def _parseQuantifier(self) -> tuple[int, int | None]:
 
