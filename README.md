@@ -38,7 +38,10 @@ print(re.next()) # a2b
 
 ## What I plan to support
 
-- [ ] Lookahead and lookbehind
+I think those features would slow down the library too much and they are not widely used. If you have suggestions on how to implement them efficiently, please let me know.
+
+- [ ] Lookahead
+- [ ] Lookbehind
 
 ## What is not supported
 

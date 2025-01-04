@@ -1,5 +1,5 @@
 from .regex_parser import RegexParser
-from .regex_tree import RegexTree
+from .regex_tree import Group
 
 
 class RegexEnumerator:
@@ -20,7 +20,7 @@ class RegexEnumerator:
 
         charset = ''.join(sorted(set(default_charset + additional)))
         parser = RegexParser(regex, charset)
-        self.regexTree: RegexTree = parser.parse()
+        self.regexTree: Group = parser.parse()
         self.current: list[str] = list(self.regexTree.current)
         self.done: bool = self.regexTree.done and len(self.current) == 0
 

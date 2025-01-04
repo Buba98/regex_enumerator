@@ -1,4 +1,4 @@
-class RegexTree:
+class Group:
     pass
 
 
@@ -46,11 +46,11 @@ class CharClass:
 
 
 class BackReference:
-    def __init__(self, reference: RegexTree, min_len: int, max_len: int | None):
+    def __init__(self, reference: Group, min_len: int, max_len: int | None):
         self._min_len = min_len
         self._max_len = max_len
         self._index = 0
-        self.reference: RegexTree = reference
+        self.reference: Group = reference
         self.done = max_len == 0 or (
             reference.done and len(reference.current) == 0)
         self.current = self._first()
@@ -91,7 +91,7 @@ class BackReference:
 
 
 class Alternative:
-    def __init__(self, elements: list[CharClass | RegexTree | BackReference]):
+    def __init__(self, elements: list[CharClass | Group | BackReference]):
         self._index = 0
         self._elements = [e for e in elements if not e.done or len(e.current)]
         self._noBackreference = not any(isinstance(
@@ -116,9 +116,9 @@ class Alternative:
                 index = 0
 
         self._index = index
-        result: list[tuple[str, dict[RegexTree, str]]] = []
+        result: list[tuple[str, dict[Group, str]]] = []
 
-        if isinstance(self._elements[0], RegexTree) and len(self._elements[0].references):
+        if isinstance(self._elements[0], Group) and len(self._elements[0].references):
             for string in self._elements[0].next() if index == 0 else self._elements[0].current:
                 result.append((string, {self._elements[0]: string}))
         else:
@@ -138,7 +138,7 @@ class Alternative:
                     for sfx in element.current[reference]:
                         temp.append(
                             (pfx[0] + sfx, pfx[1]))
-            elif isinstance(element, RegexTree) and len(element.references):
+            elif isinstance(element, Group) and len(element.references):
                 for sfx in element.next() if i == index else element.current:
                     for pfx in result:
                         temp.append((pfx[0] + sfx, {**pfx[1], element: sfx}))
@@ -202,9 +202,9 @@ class Alternative:
 
         assert not isinstance(self._elements[0], BackReference)
 
-        result: list[tuple[str, dict[RegexTree, str]]] = []
+        result: list[tuple[str, dict[Group, str]]] = []
 
-        if isinstance(self._elements[0], RegexTree) and len(self._elements[0].references):
+        if isinstance(self._elements[0], Group) and len(self._elements[0].references):
             for char in self._elements[0].current:
                 result.append((char, {self._elements[0]: char}))
         else:
@@ -214,7 +214,7 @@ class Alternative:
         done = self._elements[0].done
 
         for element in self._elements[1:]:
-            temp: list[tuple[str, dict[RegexTree, str]]] = []
+            temp: list[tuple[str, dict[Group, str]]] = []
             done = done and element.done
             if isinstance(element, BackReference):
                 for pfx in result:
@@ -223,7 +223,7 @@ class Alternative:
                     for sfx in element.current[reference]:
                         temp.append(
                             (pfx[0] + sfx, pfx[1]))
-            elif isinstance(element, RegexTree) and len(element.references):
+            elif isinstance(element, Group) and len(element.references):
                 for pfx in result:
                     for sfx in element.current:
                         temp.append((pfx[0] + sfx, {**pfx[1], element: sfx}))
@@ -238,7 +238,7 @@ class Alternative:
         return {struct[0] for struct in result}
 
 
-class RegexTree:
+class Group:
     def __init__(self, alternatives: list[Alternative], min_len: int, max_len: int | None):
         self.references: list[BackReference] = []
         self._alternatives: list[Alternative] = alternatives

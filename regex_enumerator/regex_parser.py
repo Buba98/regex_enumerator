@@ -1,4 +1,4 @@
-from .regex_tree import Alternative, BackReference, CharClass, RegexTree
+from .regex_tree import Alternative, BackReference, CharClass, Group
 
 
 class RegexError(Exception):
@@ -22,15 +22,15 @@ class RegexParser:
         self.regex = regex
         self.charset = charset
 
-    def parse(self) -> RegexTree:
+    def parse(self) -> Group:
         self.index = 0
-        return self._parseRegex(False)
+        return self._parseGroup(False)
 
-    def _parseRegex(self, to_close: bool) -> RegexTree:
+    def _parseGroup(self, to_close: bool) -> Group:
         alternatives: list[Alternative] = []
-        elements: list[CharClass | RegexTree | BackReference] = []
-        named_groups: dict[str, RegexTree] = {}
-        ordered_groups: list[RegexTree] = []
+        elements: list[CharClass | Group | BackReference] = []
+        named_groups: dict[str, Group] = {}
+        ordered_groups: list[Group] = []
         min_len_group, max_len_group = 1, 1
 
         while self.index < len(self.regex):
@@ -53,16 +53,16 @@ class RegexParser:
                             self.index += 1
                             if name in named_groups:
                                 self._raise_error("Duplicate named group")
-                            subTree = self._parseRegex(True)
+                            subTree = self._parseGroup(True)
                             named_groups[name] = subTree
                             ordered_groups.append(subTree)
                         elif self.regex[self.index] == ':':
                             self.index += 1
-                            subTree = self._parseRegex(True)
+                            subTree = self._parseGroup(True)
                         else:
                             self._raise_error("Invalid group")
                     else:
-                        subTree = self._parseRegex(True)
+                        subTree = self._parseGroup(True)
                         ordered_groups.append(subTree)
                     elements.append(subTree)
                 case ')':
@@ -115,7 +115,7 @@ class RegexParser:
             self._raise_error("Unmatched opening parenthesis")
 
         alternatives.append(Alternative(elements))
-        return RegexTree(alternatives, min_len_group, max_len_group)
+        return Group(alternatives, min_len_group, max_len_group)
 
     def _parseBackReferenceLookahead(self) -> str | int | None:
         if len(self.regex) <= self.index:
